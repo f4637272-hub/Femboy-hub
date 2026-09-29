@@ -1,4 +1,4 @@
---[[ Femboy Hub v2.3 | Author: Femboy | MM2 ]]
+--[[ Femboy Hub v2.4 | Author: Femboy | PC + Mobile ]]
 if _G.FB_Loaded then return end
 _G.FB_Loaded = true
 
@@ -12,6 +12,16 @@ local Http = game:GetService("HttpService")
 local WS = game:GetService("Workspace")
 local LP = Players.LocalPlayer
 local Cam = WS.CurrentCamera
+
+-- Platform detection
+local IS_MOBILE = UIS.TouchEnabled and not UIS.KeyboardEnabled
+local IS_PC = UIS.KeyboardEnabled and not UIS.TouchEnabled
+local IS_TABLET = UIS.TouchEnabled and UIS.KeyboardEnabled
+
+local SCREEN = Cam.ViewportSize
+local UI_SCALE = IS_MOBILE and math.clamp(SCREEN.X / 900, 0.65, 0.95) or 1
+local WIN_W = math.floor(700 * UI_SCALE)
+local WIN_H = math.floor(470 * UI_SCALE)
 
 local function safe(fn, d)
     local ok, r = pcall(fn)
@@ -69,7 +79,6 @@ local F = {
     VIS_Contrast = 0.1,
     VIS_Brightness = 0,
     VIS_Trail = false,
-    VIS_TrailColor = Color3.fromRGB(255, 105, 180),
     VIS_Headless = false,
     FARM_AutoCoins = false,
     FARM_AutoDrops = false,
@@ -120,7 +129,6 @@ local function applyTheme(name)
 end
 applyTheme(F.THEME_Name)
 
--- ================= HELPERS =================
 local function round(obj, r)
     local c = Instance.new("UICorner")
     c.CornerRadius = UDim.new(0, r or 8)
@@ -149,13 +157,13 @@ local function tw(obj, props, time)
     return Tween:Create(obj, TweenInfo.new(time or 0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), props)
 end
 
--- ================= BLUR UNDER MENU =================
+-- Blur под меню
 local menuBlur = Instance.new("BlurEffect")
 menuBlur.Name = "FB_MenuBlur"
 menuBlur.Size = 8
 menuBlur.Parent = Lighting
 
--- ================= NOTIFICATIONS =================
+-- Notifications
 local NotifHolder = nil
 local function notify(title, desc, dur, color)
     dur = dur or 3
@@ -163,8 +171,8 @@ local function notify(title, desc, dur, color)
     if not NotifHolder or not NotifHolder.Parent then
         NotifHolder = Instance.new("Frame")
         NotifHolder.Name = "FB_Notif"
-        NotifHolder.Size = UDim2.new(0, 300, 1, -40)
-        NotifHolder.Position = UDim2.new(1, -320, 0, 20)
+        NotifHolder.Size = UDim2.new(0, IS_MOBILE and 240 or 300, 1, -40)
+        NotifHolder.Position = UDim2.new(1, IS_MOBILE and -250 or -320, 0, 20)
         NotifHolder.BackgroundTransparency = 1
         NotifHolder.ZIndex = 500
         NotifHolder.Parent = Parent
@@ -231,10 +239,10 @@ Gui.IgnoreGuiInset = true
 Gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 Gui.Parent = Parent
 
--- Main window (translucent)
+-- Adaptive Main
 local Main = Instance.new("Frame")
-Main.Size = UDim2.new(0, 700, 0, 470)
-Main.Position = UDim2.new(0.5, -350, 0.5, -235)
+Main.Size = UDim2.new(0, WIN_W, 0, WIN_H)
+Main.Position = UDim2.new(0.5, -WIN_W/2, 0.5, -WIN_H/2)
 Main.BackgroundColor3 = T.Bg
 Main.BackgroundTransparency = 0.25
 Main.BorderSizePixel = 0
@@ -246,6 +254,10 @@ Main.Parent = Gui
 round(Main, 14)
 stroke(Main, T.Acc, 1.4, 0.35)
 grad(Main, Color3.fromRGB(32,28,42), Color3.fromRGB(16,14,24), 135)
+
+if IS_MOBILE then
+    Main.Position = UDim2.new(0.5, -WIN_W/2, 0.15, 0)
+end
 
 local TopShine = Instance.new("Frame")
 TopShine.Size = UDim2.new(1, 0, 0, 80)
@@ -356,7 +368,7 @@ local VT = Instance.new("TextLabel")
 VT.Size = UDim2.new(0, 60, 1, 0)
 VT.Position = UDim2.new(0, 148, 0, 0)
 VT.BackgroundTransparency = 1
-VT.Text = "v2.3"
+VT.Text = "v2.4"
 VT.TextColor3 = T.Acc
 VT.Font = T.FS
 VT.TextSize = 11
@@ -437,7 +449,6 @@ Ct.BackgroundTransparency = 1
 Ct.ZIndex = 13
 Ct.Parent = Main
 
--- Top tabs (scrollable)
 local TTabs = Instance.new("ScrollingFrame")
 TTabs.Size = UDim2.new(1, -24, 0, 36)
 TTabs.Position = UDim2.new(0, 12, 0, 10)
@@ -638,8 +649,8 @@ local function mkSlider(parent, name, flag, min, max, suffix, cb)
     V.ZIndex = R.ZIndex + 2
     V.Parent = R
     local BB = Instance.new("Frame")
-    BB.Size = UDim2.new(1, -28, 0, 4)
-    BB.Position = UDim2.new(0, 14, 0, 34)
+    BB.Size = UDim2.new(1, -28, 0, 8)
+    BB.Position = UDim2.new(0, 14, 0, 32)
     BB.BackgroundColor3 = T.Bg3
     BB.BorderSizePixel = 0
     BB.ZIndex = R.ZIndex + 2
@@ -860,7 +871,7 @@ end
 
 local function mkTopTab(name, pageName)
     local B = Instance.new("TextButton")
-    B.Size = UDim2.new(0, 96, 0, 30)
+    B.Size = UDim2.new(0, IS_MOBILE and 82 or 96, 0, 30)
     B.BackgroundColor3 = T.El
     B.BackgroundTransparency = 0.55
     B.Text = ""
@@ -1007,6 +1018,31 @@ mkSlider(p, "Fly Speed", "MOVE_FlySpeed", 20, 300, "")
 mkToggle(p, "Infinite Jump", "MOVE_InfiniteJump")
 mkToggle(p, "NoClip", "MOVE_NoClip")
 mkToggle(p, "Sprint (Shift)", "MOVE_Sprint")
+
+-- Mobile fly buttons
+if IS_MOBILE or IS_TABLET then
+    mkButton(p, "Fly Up (tap)", function()
+        local c = LP.Character
+        if c and c:FindFirstChild("HumanoidRootPart") then
+            local bv = Instance.new("BodyVelocity")
+            bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+            bv.Velocity = Vector3.new(0, 60, 0)
+            bv.Parent = c.HumanoidRootPart
+            task.delay(0.6, function() bv:Destroy() end)
+        end
+    end)
+    mkButton(p, "Fly Down (tap)", function()
+        local c = LP.Character
+        if c and c:FindFirstChild("HumanoidRootPart") then
+            local bv = Instance.new("BodyVelocity")
+            bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+            bv.Velocity = Vector3.new(0, -60, 0)
+            bv.Parent = c.HumanoidRootPart
+            task.delay(0.6, function() bv:Destroy() end)
+        end
+    end)
+end
+
 mkDiv(p)
 mkButton(p, "Reset Character", function()
     local c = LP.Character
@@ -1107,7 +1143,7 @@ mkDropdown(p, "UI Theme", "THEME_Name", {"Pink", "Cyan", "Purple", "Red", "Green
     VT.TextColor3 = T.Acc
 end)
 mkDiv(p)
-mkSection(p, "Keybinds")
+mkSection(p, "Keybinds (PC)")
 mkTextbox(p, "Bind: Fly", "BIND_Fly")
 mkTextbox(p, "Bind: Aimbot", "BIND_Aimbot")
 mkTextbox(p, "Bind: ESP", "BIND_ESP")
@@ -1142,6 +1178,7 @@ mkDiv(p)
 mkButton(p, "Destroy UI", function()
     if menuBlur then menuBlur:Destroy() end
     Gui:Destroy()
+    _G.FB_Loaded = false
 end)
 
 -- INFO
@@ -1157,7 +1194,7 @@ infoLabel.TextSize = 12
 infoLabel.TextXAlignment = Enum.TextXAlignment.Left
 infoLabel.TextYAlignment = Enum.TextYAlignment.Top
 infoLabel.TextWrapped = true
-infoLabel.Text = "Press 'Refresh Info' below"
+infoLabel.Text = "Tap 'Refresh Info' below"
 infoLabel.Parent = p
 round(infoLabel, 9)
 stroke(infoLabel, T.Stroke, 1, 0.55)
@@ -1168,7 +1205,7 @@ pad.Parent = infoLabel
 
 mkSection(p, "Authors")
 local cr = Instance.new("TextLabel")
-cr.Size = UDim2.new(1, 0, 0, 90)
+cr.Size = UDim2.new(1, 0, 0, 100)
 cr.BackgroundColor3 = T.El
 cr.BackgroundTransparency = 0.55
 cr.TextColor3 = T.Tx
@@ -1177,7 +1214,7 @@ cr.TextSize = 13
 cr.TextXAlignment = Enum.TextXAlignment.Left
 cr.TextYAlignment = Enum.TextYAlignment.Top
 cr.TextWrapped = true
-cr.Text = "Author: Femboy\nStyle: Glossy Modern v2.3\nBuild: Femboy Hub\nDiscord: " .. F.MISC_Discord
+cr.Text = "Author: Femboy\nStyle: Glossy Modern v2.4\nPlatform: " .. (IS_MOBILE and "Mobile" or "PC") .. "\nBuild: Femboy Hub\nDiscord: " .. F.MISC_Discord
 cr.Parent = p
 round(cr, 10)
 stroke(cr, T.Acc, 1, 0.4)
@@ -1209,6 +1246,56 @@ mkButton(p, "Refresh Info", function()
 end)
 
 Tabs.ESP.activate()
+
+-- ================= MOBILE FLOATING BUTTON =================
+local FAB
+if IS_MOBILE or IS_TABLET then
+    FAB = Instance.new("TextButton")
+    FAB.Name = "FB_FAB"
+    FAB.Size = UDim2.new(0, 56, 0, 56)
+    FAB.Position = UDim2.new(0, 20, 0.4, 0)
+    FAB.BackgroundColor3 = T.Acc
+    FAB.Text = "🌸"
+    FAB.TextSize = 26
+    FAB.Font = Enum.Font.GothamBold
+    FAB.AutoButtonColor = false
+    FAB.Active = true
+    FAB.Draggable = true
+    FAB.ZIndex = 1000
+    FAB.Parent = Gui
+    round(FAB, 999)
+    stroke(FAB, T.Acc2, 2, 0.2)
+    grad(FAB, T.Acc, T.Acc2, 45)
+
+    task.spawn(function()
+        while FAB and FAB.Parent do
+            tw(FAB, {Size = UDim2.new(0, 62, 0, 62)}, 0.6):Play()
+            task.wait(0.6)
+            tw(FAB, {Size = UDim2.new(0, 56, 0, 56)}, 0.6):Play()
+            task.wait(0.6)
+        end
+    end)
+
+    local menuOpen = false
+    FAB.MouseButton1Click:Connect(function()
+        menuOpen = not menuOpen
+        if menuOpen then
+            Main.Visible = true
+            Main.Size = UDim2.new(0, 0, 0, 0)
+            Main.Position = UDim2.new(0.5, 0, 0.5, 0)
+            tw(Main, {
+                Size = UDim2.new(0, WIN_W, 0, WIN_H),
+                Position = UDim2.new(0.5, -WIN_W/2, 0.5, -WIN_H/2),
+            }, 0.35):Play()
+            FAB.Text = "X"
+        else
+            tw(Main, {Size = UDim2.new(0, 0, 0, 0), Position = UDim2.new(0.5, 0, 0.5, 0)}, 0.25):Play()
+            task.wait(0.3)
+            Main.Visible = false
+            FAB.Text = "🌸"
+        end
+    end)
+end
 
 -- ================= LOGIC =================
 
@@ -1367,14 +1454,24 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- Aim
+-- Aim (PC: RMB, Mobile: touch)
 local aiming = false
-UIS.InputBegan:Connect(function(i)
-    if i.UserInputType == Enum.UserInputType.MouseButton2 then aiming = true end
-end)
-UIS.InputEnded:Connect(function(i)
-    if i.UserInputType == Enum.UserInputType.MouseButton2 then aiming = false end
-end)
+if IS_MOBILE or IS_TABLET then
+    UIS.InputBegan:Connect(function(i, gp)
+        if gp then return end
+        if i.UserInputType == Enum.UserInputType.Touch then aiming = true end
+    end)
+    UIS.InputEnded:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.Touch then aiming = false end
+    end)
+else
+    UIS.InputBegan:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton2 then aiming = true end
+    end)
+    UIS.InputEnded:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton2 then aiming = false end
+    end)
+end
 
 RunService.RenderStepped:Connect(function()
     if not F.AIM_Enabled or not aiming then return end
@@ -1428,7 +1525,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- Post-processing
+-- Post processing
 task.spawn(function()
     while task.wait(0.5) do
         local bloom = Lighting:FindFirstChild("FB_Bloom")
@@ -1528,7 +1625,7 @@ RunService.Heartbeat:Connect(function()
             trailObj.Attachment1 = trailAttach
             trailObj.Lifetime = 0.6
             trailObj.MinLength = 0
-            trailObj.Color = ColorSequence.new(F.VIS_TrailColor, Color3.fromRGB(180, 130, 255))
+            trailObj.Color = ColorSequence.new(T.Acc, T.Acc2)
             trailObj.Transparency = NumberSequence.new({
                 NumberSequenceKeypoint.new(0, 0.2),
                 NumberSequenceKeypoint.new(1, 1),
@@ -1537,6 +1634,8 @@ RunService.Heartbeat:Connect(function()
             trailObj.LightInfluence = 0
             trailObj.WidthScale = NumberSequence.new(1)
             trailObj.Parent = c
+        else
+            trailObj.Color = ColorSequence.new(T.Acc, T.Acc2)
         end
     else
         if trailObj then
@@ -1568,7 +1667,16 @@ RunService.Heartbeat:Connect(function()
         if UIS:IsKeyDown(Enum.KeyCode.D) then dir = dir + Cam.CFrame.RightVector end
         if UIS:IsKeyDown(Enum.KeyCode.Space) then dir = dir + Vector3.new(0, 1, 0) end
         if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then dir = dir - Vector3.new(0, 1, 0) end
-        flyBV.Velocity = dir * F.MOVE_FlySpeed
+
+        -- Mobile: use humanoid MoveDirection (left joystick)
+        if IS_MOBILE then
+            local hum = c:FindFirstChild("Humanoid")
+            if hum and hum.MoveDirection.Magnitude > 0.1 then
+                dir = hum.MoveDirection * 60
+            end
+        end
+
+        flyBV.Velocity = dir * (F.MOVE_FlySpeed / 60)
     else
         if flyBV then
             flyBV:Destroy()
@@ -1600,23 +1708,25 @@ RunService.Stepped:Connect(function()
     end
 end)
 
--- Sprint
-UIS.InputBegan:Connect(function(i)
-    if i.KeyCode == Enum.KeyCode.LeftShift and F.MOVE_Sprint then
-        local c = LP.Character
-        if c and c:FindFirstChild("Humanoid") then
-            c.Humanoid.WalkSpeed = F.MOVE_Walkspeed + 25
+-- Sprint (PC only)
+if IS_PC then
+    UIS.InputBegan:Connect(function(i)
+        if i.KeyCode == Enum.KeyCode.LeftShift and F.MOVE_Sprint then
+            local c = LP.Character
+            if c and c:FindFirstChild("Humanoid") then
+                c.Humanoid.WalkSpeed = F.MOVE_Walkspeed + 25
+            end
         end
-    end
-end)
-UIS.InputEnded:Connect(function(i)
-    if i.KeyCode == Enum.KeyCode.LeftShift and F.MOVE_Sprint then
-        local c = LP.Character
-        if c and c:FindFirstChild("Humanoid") then
-            c.Humanoid.WalkSpeed = F.MOVE_Walkspeed
+    end)
+    UIS.InputEnded:Connect(function(i)
+        if i.KeyCode == Enum.KeyCode.LeftShift and F.MOVE_Sprint then
+            local c = LP.Character
+            if c and c:FindFirstChild("Humanoid") then
+                c.Humanoid.WalkSpeed = F.MOVE_Walkspeed
+            end
         end
-    end
-end)
+    end)
+end
 
 -- Anti-AFK
 if F.MISC_AntiAFK then
@@ -1675,25 +1785,27 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- Keybinds
-UIS.InputBegan:Connect(function(i, gp)
-    if gp then return end
-    local key = i.KeyCode.Name
-    if key == F.BIND_Fly then
-        F.MOVE_Fly = not F.MOVE_Fly
-        notify("Bind", "Fly: " .. tostring(F.MOVE_Fly), 1.5, T.Acc)
-    elseif key == F.BIND_Aimbot then
-        F.AIM_Enabled = not F.AIM_Enabled
-        notify("Bind", "Aimbot: " .. tostring(F.AIM_Enabled), 1.5, T.Acc)
-    elseif key == F.BIND_ESP then
-        F.ESP_Enabled = not F.ESP_Enabled
-        notify("Bind", "ESP: " .. tostring(F.ESP_Enabled), 1.5, T.Acc)
-    elseif key == F.BIND_UI then
-        Main.Visible = not Main.Visible
-    end
-end)
+-- Keybinds (PC only)
+if IS_PC then
+    UIS.InputBegan:Connect(function(i, gp)
+        if gp then return end
+        local key = i.KeyCode.Name
+        if key == F.BIND_Fly then
+            F.MOVE_Fly = not F.MOVE_Fly
+            notify("Bind", "Fly: " .. tostring(F.MOVE_Fly), 1.5, T.Acc)
+        elseif key == F.BIND_Aimbot then
+            F.AIM_Enabled = not F.AIM_Enabled
+            notify("Bind", "Aimbot: " .. tostring(F.AIM_Enabled), 1.5, T.Acc)
+        elseif key == F.BIND_ESP then
+            F.ESP_Enabled = not F.ESP_Enabled
+            notify("Bind", "ESP: " .. tostring(F.ESP_Enabled), 1.5, T.Acc)
+        elseif key == F.BIND_UI then
+            Main.Visible = not Main.Visible
+        end
+    end)
+end
 
--- FPS (center top)
+-- FPS
 local statsLabel
 local fpsC, fpsT, fpsV = 0, 0, 0
 RunService.RenderStepped:Connect(function(dt)
@@ -1727,13 +1839,18 @@ RunService.RenderStepped:Connect(function(dt)
     end
 end)
 
--- Close
+-- Close button
 CB.MouseButton1Click:Connect(function()
-    if menuBlur then menuBlur:Destroy() end
-    tw(Main, {Size = UDim2.new(0, 0, 0, 0), Position = UDim2.new(0.5, 0, 0.5, 0)}, 0.25):Play()
-    task.wait(0.3)
-    Gui:Destroy()
-    _G.FB_Loaded = false
+    if IS_MOBILE and FAB then
+        Main.Visible = false
+        FAB.Text = "🌸"
+    else
+        if menuBlur then menuBlur:Destroy() end
+        tw(Main, {Size = UDim2.new(0, 0, 0, 0), Position = UDim2.new(0.5, 0, 0.5, 0)}, 0.25):Play()
+        task.wait(0.3)
+        Gui:Destroy()
+        _G.FB_Loaded = false
+    end
 end)
 
 -- Minimize
@@ -1743,21 +1860,28 @@ MB.MouseButton1Click:Connect(function()
     if minimized then
         tw(Sb, {Position = UDim2.new(0, -170, 0, 48)}, 0.2):Play()
         tw(Ct, {Position = UDim2.new(0, 0, 0, 48)}, 0.2):Play()
-        tw(Main, {Size = UDim2.new(0, 700, 0, 48)}, 0.25):Play()
+        tw(Main, {Size = UDim2.new(0, WIN_W, 0, 48)}, 0.25):Play()
     else
         tw(Sb, {Position = UDim2.new(0, 0, 0, 48)}, 0.2):Play()
         tw(Ct, {Position = UDim2.new(0, 170, 0, 48)}, 0.2):Play()
-        tw(Main, {Size = UDim2.new(0, 700, 0, 470)}, 0.25):Play()
+        tw(Main, {Size = UDim2.new(0, WIN_W, 0, WIN_H)}, 0.25):Play()
     end
 end)
 
--- Fade in
-Main.Size = UDim2.new(0, 0, 0, 0)
-Main.Position = UDim2.new(0.5, 0, 0.5, 0)
-Tween:Create(Main, TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-    Size = UDim2.new(0, 700, 0, 470),
-    Position = UDim2.new(0.5, -350, 0.5, -235),
-}):Play()
+-- Fade in / Mobile default
+if IS_MOBILE or IS_TABLET then
+    Main.Visible = false
+    task.delay(1, function()
+        notify("Femboy Hub v2.4", "Tap 🌸 to open menu", 5)
+    end)
+else
+    Main.Size = UDim2.new(0, 0, 0, 0)
+    Main.Position = UDim2.new(0.5, 0, 0.5, 0)
+    Tween:Create(Main, TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, WIN_W, 0, WIN_H),
+        Position = UDim2.new(0.5, -WIN_W/2, 0.5, -WIN_H/2),
+    }):Play()
+    notify("Femboy Hub v2.4", "Author: Femboy", 4)
+end
 
-notify("Femboy Hub v2.3", "Author: Femboy", 4)
-print("[Femboy Hub v2.3] loaded | Author: Femboy")
+print("[Femboy Hub v2.4] loaded | Author: Femboy | Mobile: " .. tostring(IS_MOBILE) .. " | PC: " .. tostring(IS_PC))
