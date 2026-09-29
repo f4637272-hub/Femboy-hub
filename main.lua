@@ -1205,7 +1205,8 @@ UIS.JumpRequest:Connect(function()
     end
 end)
 
--- NoClipRunService.Stepped:Connect(function()
+-- NoClip
+RunService.Stepped:Connect(function()
     if not F.MOVE_NoClip then return end
     local c = LP.Character
     if c then
