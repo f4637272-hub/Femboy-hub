@@ -1,4 +1,4 @@
---[[ Femboy x Pumpkin UI | v5.2 | Silent Aim + Auto Shoot + Halloween ]]
+--[[ Femboy x Pumpkin UI | v5.3 | Silent Aim + Auto Shoot + Halloween ]]
 if _G.FB_Loaded then return end
 _G.FB_Loaded = true
 
@@ -13,8 +13,8 @@ local LP = Players.LocalPlayer
 local Cam = WS.CurrentCamera
 
 local IS_MOBILE = UIS.TouchEnabled and not UIS.KeyboardEnabled
-local WIN_W = IS_MOBILE and 650 or 760
-local WIN_H = IS_MOBILE and 410 or 470
+local WIN_W = IS_MOBILE and 360 or 720
+local WIN_H = IS_MOBILE and 420 or 430
 
 local function safe(fn,d) local ok,r=pcall(fn) if ok and r~=nil then return r end return d end
 local gethuiS = safe(function() return gethui() end, nil)
@@ -57,23 +57,45 @@ local THEMES = {
 local T = {Bg=THEMES.Halloween.Bg, Bg2=THEMES.Halloween.Bg2, Bg3=THEMES.Halloween.Bg3, Panel=THEMES.Halloween.Panel, El=THEMES.Halloween.El, Hover=THEMES.Halloween.Hover, Acc=THEMES.Halloween.Acc, Acc2=THEMES.Halloween.Acc2, Tx=THEMES.Halloween.Tx, TxD=THEMES.Halloween.TxD, Grn=Color3.fromRGB(40,200,80), Red=Color3.fromRGB(220,40,40), Stroke=THEMES.Halloween.Stroke, F=Enum.Font.GothamMedium, FB=Enum.Font.GothamBold, FS=Enum.Font.GothamSemibold}
 
 local ThemeRoots = {}
-local function sameColor(a,b) return typeof(a)=="Color3" and typeof(b)=="Color3" and math.abs(a.R-b.R)<0.001 and math.abs(a.G-b.G)<0.001 and math.abs(a.B-b.B)<0.001 end
+local function colorKey(c)
+    if typeof(c) ~= "Color3" then return nil end
+    return string.format("%.4f|%.4f|%.4f", c.R, c.G, c.B)
+end
 local function applyTheme(name)
-    local nextTheme=THEMES[name] or THEMES.Halloween
-    local old={Bg=T.Bg,Bg2=T.Bg2,Bg3=T.Bg3,Panel=T.Panel,El=T.El,Hover=T.Hover,Acc=T.Acc,Acc2=T.Acc2,Tx=T.Tx,TxD=T.TxD,Stroke=T.Stroke}
-    for k,v in pairs(nextTheme) do T[k]=v end
-    F.TH_Name=name
-    local map={}
-    for k,v in pairs(old) do map[v]=nextTheme[k] end
+    local nextTheme = THEMES[name] or THEMES.Halloween
+    local old = {Bg=T.Bg,Bg2=T.Bg2,Bg3=T.Bg3,Panel=T.Panel,El=T.El,Hover=T.Hover,Acc=T.Acc,Acc2=T.Acc2,Tx=T.Tx,TxD=T.TxD,Stroke=T.Stroke}
+    local map = {}
+    for k,v in pairs(old) do map[colorKey(v)] = nextTheme[k] end
+    for k,v in pairs(nextTheme) do T[k] = v end
+    F.TH_Name = name
     for _,root in ipairs(ThemeRoots) do
         if root and root.Parent then
             for _,o in ipairs(root:GetDescendants()) do
                 pcall(function()
-                    if o:IsA("GuiObject") then o.BackgroundColor3=map[o.BackgroundColor3] or o.BackgroundColor3; o.BorderColor3=map[o.BorderColor3] or o.BorderColor3 end
-                    if o:IsA("TextLabel") or o:IsA("TextButton") or o:IsA("TextBox") then o.TextColor3=map[o.TextColor3] or o.TextColor3; o.PlaceholderColor3=map[o.PlaceholderColor3] or o.PlaceholderColor3 end
-                    if o:IsA("ImageLabel") or o:IsA("ImageButton") then o.ImageColor3=map[o.ImageColor3] or o.ImageColor3 end
-                    if o:IsA("ScrollingFrame") then o.ScrollBarImageColor3=map[o.ScrollBarImageColor3] or o.ScrollBarImageColor3 end
-                    if o:IsA("UIStroke") then o.Color=map[o.Color] or o.Color end
+                    if o:IsA("GuiObject") then
+                        local bg = map[colorKey(o.BackgroundColor3)]
+                        if bg then o.BackgroundColor3 = bg end
+                        local bc = map[colorKey(o.BorderColor3)]
+                        if bc then o.BorderColor3 = bc end
+                    end
+                    if o:IsA("TextLabel") or o:IsA("TextButton") or o:IsA("TextBox") then
+                        local tc = map[colorKey(o.TextColor3)]
+                        if tc then o.TextColor3 = tc end
+                        local pc = map[colorKey(o.PlaceholderColor3)]
+                        if pc then o.PlaceholderColor3 = pc end
+                    end
+                    if o:IsA("ImageLabel") or o:IsA("ImageButton") then
+                        local ic = map[colorKey(o.ImageColor3)]
+                        if ic then o.ImageColor3 = ic end
+                    end
+                    if o:IsA("ScrollingFrame") then
+                        local sc = map[colorKey(o.ScrollBarImageColor3)]
+                        if sc then o.ScrollBarImageColor3 = sc end
+                    end
+                    if o:IsA("UIStroke") then
+                        local st = map[colorKey(o.Color)]
+                        if st then o.Color = st end
+                    end
                 end)
             end
         end
@@ -117,10 +139,12 @@ local function notify(title,desc,dur,color)
 end
 
 -- ================= GUI =================
+local SIDE_W = IS_MOBILE and 38 or 44
+local TOP_H = IS_MOBILE and 30 or 34
 local Gui=Instance.new("ScreenGui")
 Gui.Name="FemboyUI" Gui.ResetOnSpawn=false Gui.IgnoreGuiInset=true
 Gui.ZIndexBehavior=Enum.ZIndexBehavior.Sibling Gui.Parent=Parent
-table.insert(ThemeRoots,Gui)
+table.insert(ThemeRoots, Gui)
 
 local Main=Instance.new("Frame")
 Main.Size=UDim2.new(0,WIN_W,0,WIN_H)
@@ -130,14 +154,15 @@ Main.BorderSizePixel=0 Main.Active=true Main.Draggable=true Main.ClipsDescendant
 Main.ZIndex=10 Main.Parent=Gui
 round(Main,12) stroke(Main,T.Acc,1.5,0.2)
 if IS_MOBILE then Main.Position=UDim2.new(0.5,-WIN_W/2,0.1,0) end
+if IS_MOBILE then Main.ClipsDescendants=true end
 
 -- Topbar
 local Topbar=Instance.new("Frame")
-Topbar.Size=UDim2.new(1,0,0,34) Topbar.BackgroundColor3=T.Bg2
+Topbar.Size=UDim2.new(1,0,0,TOP_H) Topbar.BackgroundColor3=T.Bg2
 Topbar.BackgroundTransparency=0.15 Topbar.BorderSizePixel=0 Topbar.ZIndex=11 Topbar.Parent=Main
 
 local Logo=Instance.new("Frame")
-Logo.Size=UDim2.new(0,24,0,24) Logo.Position=UDim2.new(0,10,0,5)
+Logo.Size=UDim2.new(0,22,0,22) Logo.Position=UDim2.new(0,7,0,4)
 Logo.BackgroundColor3=T.Acc Logo.BorderSizePixel=0 Logo.ZIndex=13 Logo.Parent=Topbar
 round(Logo,6)
 local LogoLbl=Instance.new("TextLabel")
@@ -145,13 +170,13 @@ LogoLbl.Size=UDim2.new(1,0,1,0) LogoLbl.BackgroundTransparency=1
 LogoLbl.Text="🎃" LogoLbl.TextSize=13 LogoLbl.ZIndex=14 LogoLbl.Parent=Logo
 
 local HubName=Instance.new("TextLabel")
-HubName.Size=UDim2.new(0,170,1,0) HubName.Position=UDim2.new(0,42,0,0)
-HubName.BackgroundTransparency=1 HubName.Text="Femboy Hub  •  v5.2"
+HubName.Size=UDim2.new(0,170,1,0) HubName.Position=UDim2.new(0,35,0,0)
+HubName.BackgroundTransparency=1 HubName.Text="Femboy Hub  •  v5.3"
 HubName.TextColor3=T.Tx HubName.Font=T.FB HubName.TextSize=13
 HubName.TextXAlignment=Enum.TextXAlignment.Left HubName.ZIndex=13 HubName.Parent=Topbar
 
 local SearchBox=Instance.new("Frame")
-SearchBox.Size=UDim2.new(0,190,0,22) SearchBox.Position=UDim2.new(0.5,-95,0,6)
+SearchBox.Size=UDim2.new(0,150,0,20) SearchBox.Position=UDim2.new(0.5,-75,0,5)
 SearchBox.BackgroundColor3=T.Bg3 SearchBox.BackgroundTransparency=0.3
 SearchBox.BorderSizePixel=0 SearchBox.ZIndex=13 SearchBox.Parent=Topbar
 round(SearchBox,6) stroke(SearchBox,T.Stroke,1,0.5)
@@ -167,16 +192,30 @@ StatsLabel.Size=UDim2.new(0,145,1,0) StatsLabel.Position=UDim2.new(1,-178,0,0)
 StatsLabel.BackgroundTransparency=1 StatsLabel.Text="0 FPS  •  0 ms" StatsLabel.TextColor3=T.TxD
 StatsLabel.Font=T.FS StatsLabel.TextSize=10 StatsLabel.TextXAlignment=Enum.TextXAlignment.Right
 StatsLabel.ZIndex=13 StatsLabel.Parent=Topbar
+if IS_MOBILE then StatsLabel.Visible=false end
 
 local CB=Instance.new("TextButton")
-CB.Size=UDim2.new(0,20,0,20) CB.Position=UDim2.new(1,-28,0,7)
+CB.Size=UDim2.new(0,19,0,19) CB.Position=UDim2.new(1,-26,0,5)
 CB.BackgroundColor3=T.Bg3 CB.BackgroundTransparency=0.4 CB.Text="✕"
 CB.TextColor3=T.Tx CB.Font=T.FB CB.TextSize=10 CB.AutoButtonColor=false
 CB.ZIndex=14 CB.Parent=Topbar round(CB,999) stroke(CB,T.Stroke,1,0.5)
 
+local MinBtn=Instance.new("TextButton")
+MinBtn.Size=UDim2.new(0,19,0,19) MinBtn.Position=UDim2.new(1,-49,0,5)
+MinBtn.BackgroundColor3=T.Bg3 MinBtn.BackgroundTransparency=0.4 MinBtn.Text="−"
+MinBtn.TextColor3=T.Tx MinBtn.Font=T.FB MinBtn.TextSize=12 MinBtn.AutoButtonColor=false
+MinBtn.ZIndex=14 MinBtn.Parent=Topbar round(MinBtn,999) stroke(MinBtn,T.Stroke,1,0.5)
+
+local Reopen=Instance.new("TextButton")
+Reopen.Size=UDim2.new(0,42,0,42) Reopen.Position=UDim2.new(0,12,0,12)
+Reopen.BackgroundColor3=T.Bg2 Reopen.Text="🎃" Reopen.TextSize=18 Reopen.TextColor3=T.Tx
+Reopen.Font=T.FB Reopen.AutoButtonColor=false Reopen.Visible=false
+Reopen.ZIndex=900 Reopen.Parent=Gui round(Reopen,12) stroke(Reopen,T.Acc,1.5,0.15)
+if IS_MOBILE then Reopen.Size=UDim2.new(0,38,0,38) end
+
 -- Sidebar
 local Sb=Instance.new("Frame")
-Sb.Size=UDim2.new(0,44,1,-34) Sb.Position=UDim2.new(0,0,0,34)
+Sb.Size=UDim2.new(0,SIDE_W,1,-TOP_H) Sb.Position=UDim2.new(0,0,0,TOP_H)
 Sb.BackgroundColor3=T.Bg2 Sb.BackgroundTransparency=0.3
 Sb.BorderSizePixel=0 Sb.ZIndex=11 Sb.Parent=Main
 local SbLine=Instance.new("Frame")
@@ -191,7 +230,7 @@ local SbPad=Instance.new("UIPadding")
 SbPad.PaddingTop=UDim.new(0,8) SbPad.PaddingLeft=UDim.new(0,6) SbPad.Parent=SbList
 
 local Ct=Instance.new("Frame")
-Ct.Size=UDim2.new(1,-44,1,-34) Ct.Position=UDim2.new(0,44,0,34)
+Ct.Size=UDim2.new(1,-SIDE_W,1,-TOP_H) Ct.Position=UDim2.new(0,SIDE_W,0,TOP_H)
 Ct.BackgroundTransparency=1 Ct.ZIndex=11 Ct.Parent=Main
 
 local Pages,SbItems={},{}
@@ -604,7 +643,7 @@ authLbl.Size=UDim2.new(1,0,0,90) authLbl.BackgroundColor3=T.Panel
 authLbl.BackgroundTransparency=0.5 authLbl.TextColor3=T.Tx
 authLbl.Font=T.F authLbl.TextSize=11 authLbl.TextXAlignment=Enum.TextXAlignment.Left
 authLbl.TextYAlignment=Enum.TextYAlignment.Top authLbl.TextWrapped=true
-authLbl.Text="🎃 Femboy x Pumpkin v5.1\nAuthor: Femboy\nSilent Aim + Auto Shoot\nDiscord: discord.gg/femboy"
+authLbl.Text="🎃 Femboy x Pumpkin v5.3\nAuthor: Femboy\nSilent Aim + Auto Shoot\nDiscord: discord.gg/femboy"
 authLbl.Parent=R round(authLbl,6) stroke(authLbl,T.Acc,1,0.4)
 local apad=Instance.new("UIPadding")
 apad.PaddingLeft=UDim.new(0,8) apad.PaddingTop=UDim.new(0,6) apad.Parent=authLbl
@@ -629,7 +668,12 @@ ActivePage="ESP"
 
 SInput:GetPropertyChangedSignal("Text"):Connect(function()
     local q=SInput.Text:lower():gsub("^%s+",""):gsub("%s+$","")
-    if q=="" then return end
+    if q=="" then
+        if ActivePage and Pages[ActivePage] then
+            for name,page in pairs(Pages) do page.Visible=(name==ActivePage) end
+        end
+        return
+    end
     local exact=nil
     for name in pairs(Pages) do if name:lower():find(q,1,true) then exact=name break end end
     if exact then
@@ -788,32 +832,39 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- Silent Aim
+local currentTarget = nil
+local targetRefresh = 0
+local targetRefreshRate = 0.08
 local function getBestTarget()
     local best, bestDist = nil, F.CB_FOVRadius
     local myChar = LP.Character
-    if not myChar or not myChar:FindFirstChild("HumanoidRootPart") then return nil end
-    local myHrp = myChar.HumanoidRootPart
+    if not myChar then return nil end
+    local myHrp = myChar:FindFirstChild("HumanoidRootPart")
+    if not myHrp or not Cam then return nil end
+    local center = Vector2.new(Cam.ViewportSize.X*0.5, Cam.ViewportSize.Y*0.5)
     for _,plr in ipairs(Players:GetPlayers()) do
-        if plr~=LP and plr.Character then
-            local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
-            local hum = plr.Character:FindFirstChild("Humanoid")
-            if hrp and hum and hum.Health>0 then
+        if plr ~= LP then
+            local char = plr.Character
+            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+            local hum = char and char:FindFirstChildOfClass("Humanoid")
+            if hrp and hum and hum.Health > 0 then
                 local dist3d = (hrp.Position-myHrp.Position).Magnitude
                 if dist3d <= F.CB_MaxRange then
-                    local pos, on = Cam:WorldToViewportPoint(hrp.Position)
-                    if on then
-                        local dist2d = (Vector2.new(pos.X,pos.Y) - Vector2.new(Cam.ViewportSize.X/2, Cam.ViewportSize.Y/2)).Magnitude
+                    local pos, onScreen = Cam:WorldToViewportPoint(hrp.Position)
+                    if onScreen and pos.Z > 0 then
+                        local dist2d = (Vector2.new(pos.X,pos.Y)-center).Magnitude
                         if dist2d < bestDist then
+                            local visible = true
                             if F.CB_VisibleCheck then
                                 local params = RaycastParams.new()
                                 params.FilterType = Enum.RaycastFilterType.Exclude
-                                params.FilterDescendantsInstances = {myChar, plr.Character}
-                                local dir = (hrp.Position - Cam.CFrame.Position).Unit * dist3d
-                                local result = WS:Raycast(Cam.CFrame.Position, dir, params)
-                                if not result then bestDist=dist2d best=plr end
-                            else
-                                bestDist=dist2d best=plr
+                                params.FilterDescendantsInstances = {myChar}
+                                local ok, result = pcall(function()
+                                    return WS:Raycast(Cam.CFrame.Position, hrp.Position-Cam.CFrame.Position, params)
+                                end)
+                                visible = ok and (not result or result.Instance:IsDescendantOf(char))
                             end
+                            if visible then bestDist=dist2d best=plr end
                         end
                     end
                 end
@@ -822,39 +873,50 @@ local function getBestTarget()
     end
     return best
 end
-
-local currentTarget = nil
 RunService.RenderStepped:Connect(function()
-    if not F.CB_SilentAim then currentTarget = nil return end
-    currentTarget = getBestTarget()
+    if not F.CB_SilentAim then currentTarget=nil return end
+    targetRefresh = targetRefresh + 1/60
+    if targetRefresh >= targetRefreshRate then
+        targetRefresh = 0
+        currentTarget = getBestTarget()
+    end
 end)
 
+-- The hook is deliberately guarded: one bad game call must not recurse into the hook or break the client.
+local saBusy = false
 local ok_mt, mt = pcall(getrawmetatable, game)
-if ok_mt and mt then
+if ok_mt and mt and newcclosure and getnamecallmethod and setreadonly then
     local oldNamecall = mt.__namecall
-    setreadonly(mt, false)
-    mt.__namecall = newcclosure(function(self, ...)
-        local method = getnamecallmethod()
-        local args = {...}
-        if F.CB_SilentAim and currentTarget and currentTarget.Character then
-            local hitPart = currentTarget.Character:FindFirstChild(F.CB_SilentHitPart)
-                or currentTarget.Character:FindFirstChild("Head")
-                or currentTarget.Character:FindFirstChild("HumanoidRootPart")
-            if hitPart then
-                if method == "FindPartOnRay" or method == "FindPartOnRayWithIgnoreList"
-                    or method == "FindPartOnRayWithWhitelist" or method == "Raycast" then
-                    if args[1] and typeof(args[1]) == "Ray" then
-                        args[1] = Ray.new(args[1].Origin, (hitPart.Position - args[1].Origin))
-                    elseif typeof(args[2]) == "Vector3" then
-                        args[2] = hitPart.Position - args[2]
-                    end
-                    return oldNamecall(self, unpack(args))
-                end
+    pcall(function()
+        setreadonly(mt,false)
+        mt.__namecall = newcclosure(function(self, ...)
+            if saBusy or not F.CB_SilentAim or not currentTarget or not currentTarget.Character then
+                return oldNamecall(self, ...)
             end
-        end
-        return oldNamecall(self, ...)
+            local ok, result = pcall(function()
+                local method = getnamecallmethod()
+                if method ~= "FindPartOnRay" and method ~= "FindPartOnRayWithIgnoreList" and method ~= "FindPartOnRayWithWhitelist" and method ~= "Raycast" then
+                    return oldNamecall(self, ...)
+                end
+                local hitPart = currentTarget.Character:FindFirstChild(F.CB_SilentHitPart) or currentTarget.Character:FindFirstChild("Head") or currentTarget.Character:FindFirstChild("HumanoidRootPart")
+                if not hitPart then return oldNamecall(self, ...) end
+                local args={...}
+                if typeof(args[1])=="Ray" then
+                    args[1]=Ray.new(args[1].Origin,hitPart.Position-args[1].Origin)
+                elseif method=="Raycast" and typeof(args[1])=="Vector3" and typeof(args[2])=="Vector3" then
+                    args[2]=hitPart.Position-args[1]
+                end
+                saBusy=true
+                local out=oldNamecall(self,unpack(args))
+                saBusy=false
+                return out
+            end)
+            saBusy=false
+            if ok then return result end
+            return oldNamecall(self, ...)
+        end)
+        setreadonly(mt,true)
     end)
-    setreadonly(mt, true)
 end
 
 -- Auto Shoot
@@ -1161,12 +1223,28 @@ if F.MS_AntiAFK then
     end)
 end
 
-CB.MouseButton1Click:Connect(function()
-    tw(Main,{Size=UDim2.new(0,0,0,0),Position=UDim2.new(0.5,0,0.5,0)},0.25):Play()
-    task.wait(0.3)
-    Gui:Destroy()
+local scriptClosed = false
+local function closeScript()
+    if scriptClosed then return end
+    scriptClosed = true
+    F.CB_SilentAim=false F.CB_AutoShoot=false F.CB_KillAura=false F.CB_AntiAim=false
+    F.ESP_Enabled=false F.ESP_Chams=false F.ESP_Tracer=false F.ESP_Box=false F.ESP_Name=false
+    F.MV_Fly=false F.MV_NoClip=false F.MV_InfJump=false F.FM_AutoCoins=false F.FM_AutoDrops=false F.FM_AutoKill=false
+    F.VS_Bloom=false F.VS_CC=false F.VS_Trail=false F.VS_XRay=false F.VS_FullBright=false F.VS_NoFog=false
+    for _,c in ipairs({flyBV, FB_Bloom, FB_CC}) do pcall(function() if c then c:Destroy() end end) end
+    pcall(function() if NH then NH:Destroy() end end)
+    pcall(function() Gui:Destroy() end)
     _G.FB_Loaded=false
-end)
+end
+local function setMinimized(v)
+    if scriptClosed then return end
+    Main.Visible=not v
+    Reopen.Visible=v
+end
+CB.MouseButton1Click:Connect(closeScript)
+MinBtn.MouseButton1Click:Connect(function() setMinimized(true) end)
+Reopen.MouseButton1Click:Connect(function() setMinimized(false) end)
+
 
 Main.Size=UDim2.new(0,0,0,0)
 Main.Position=UDim2.new(0.5,0,0.5,0)
@@ -1175,5 +1253,5 @@ Tween:Create(Main,TweenInfo.new(0.4,Enum.EasingStyle.Back,Enum.EasingDirection.O
     Position=UDim2.new(0.5,-WIN_W/2,0.5,-WIN_H/2)
 }):Play()
 
-notify("🎃 Femboy x Pumpkin v5.1","Silent Aim + Auto Shoot готовы",4)
-print("[Femboy x Pumpkin v5.1] loaded")
+notify("🎃 Femboy x Pumpkin v5.3","Silent Aim + Auto Shoot готовы",4)
+print("[Femboy x Pumpkin v5.3] loaded")
