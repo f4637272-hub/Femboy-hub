@@ -1,4 +1,4 @@
---[[ Femboy x Pumpkin UI 🎃 | v5.1 | Silent Aim + Auto Shoot + Halloween ]]
+--[[ Femboy x Pumpkin UI | v5.2 | Silent Aim + Auto Shoot + Halloween ]]
 if _G.FB_Loaded then return end
 _G.FB_Loaded = true
 
@@ -13,8 +13,8 @@ local LP = Players.LocalPlayer
 local Cam = WS.CurrentCamera
 
 local IS_MOBILE = UIS.TouchEnabled and not UIS.KeyboardEnabled
-local WIN_W = IS_MOBILE and 620 or 720
-local WIN_H = IS_MOBILE and 380 or 430
+local WIN_W = IS_MOBILE and 650 or 760
+local WIN_H = IS_MOBILE and 410 or 470
 
 local function safe(fn,d) local ok,r=pcall(fn) if ok and r~=nil then return r end return d end
 local gethuiS = safe(function() return gethui() end, nil)
@@ -47,25 +47,37 @@ local F = {
 
 -- ================= THEME =================
 local THEMES = {
-    Halloween = {Acc=Color3.fromRGB(255,100,0), Acc2=Color3.fromRGB(180,0,255), Bg=Color3.fromRGB(15,12,20)},
-    Pumpkin   = {Acc=Color3.fromRGB(255,140,20), Acc2=Color3.fromRGB(255,180,60), Bg=Color3.fromRGB(18,14,22)},
-    Blood     = {Acc=Color3.fromRGB(220,40,40), Acc2=Color3.fromRGB(140,0,0), Bg=Color3.fromRGB(18,10,14)},
-    Ghost     = {Acc=Color3.fromRGB(200,200,240), Acc2=Color3.fromRGB(150,150,200), Bg=Color3.fromRGB(18,16,24)},
-    Rose      = {Acc=Color3.fromRGB(255,105,180), Acc2=Color3.fromRGB(255,150,200), Bg=Color3.fromRGB(22,18,24)},
-    Cyan      = {Acc=Color3.fromRGB(120,220,255), Acc2=Color3.fromRGB(160,240,255), Bg=Color3.fromRGB(18,22,26)},
+    Halloween = {Acc=Color3.fromRGB(255,106,0), Acc2=Color3.fromRGB(177,92,255), Bg=Color3.fromRGB(14,12,19), Bg2=Color3.fromRGB(22,18,29), Bg3=Color3.fromRGB(34,27,43), Panel=Color3.fromRGB(38,30,48), El=Color3.fromRGB(47,37,59), Hover=Color3.fromRGB(61,47,76), Tx=Color3.fromRGB(244,239,249), TxD=Color3.fromRGB(158,150,170), Stroke=Color3.fromRGB(72,56,88)},
+    Pumpkin   = {Acc=Color3.fromRGB(255,145,32), Acc2=Color3.fromRGB(255,198,86), Bg=Color3.fromRGB(18,14,19), Bg2=Color3.fromRGB(28,21,27), Bg3=Color3.fromRGB(43,31,35), Panel=Color3.fromRGB(48,35,38), El=Color3.fromRGB(58,42,43), Hover=Color3.fromRGB(76,53,49), Tx=Color3.fromRGB(255,244,232), TxD=Color3.fromRGB(174,154,142), Stroke=Color3.fromRGB(91,62,54)},
+    Blood     = {Acc=Color3.fromRGB(235,48,58), Acc2=Color3.fromRGB(142,24,34), Bg=Color3.fromRGB(16,10,13), Bg2=Color3.fromRGB(27,15,19), Bg3=Color3.fromRGB(42,21,27), Panel=Color3.fromRGB(47,24,30), El=Color3.fromRGB(59,29,36), Hover=Color3.fromRGB(79,36,45), Tx=Color3.fromRGB(250,235,238), TxD=Color3.fromRGB(165,137,143), Stroke=Color3.fromRGB(91,39,49)},
+    Ghost     = {Acc=Color3.fromRGB(205,210,255), Acc2=Color3.fromRGB(151,158,215), Bg=Color3.fromRGB(13,14,21), Bg2=Color3.fromRGB(21,22,32), Bg3=Color3.fromRGB(32,33,46), Panel=Color3.fromRGB(37,38,52), El=Color3.fromRGB(46,47,63), Hover=Color3.fromRGB(62,63,83), Tx=Color3.fromRGB(239,241,255), TxD=Color3.fromRGB(151,154,178), Stroke=Color3.fromRGB(62,64,88)},
+    Rose      = {Acc=Color3.fromRGB(255,92,177), Acc2=Color3.fromRGB(255,157,211), Bg=Color3.fromRGB(19,12,19), Bg2=Color3.fromRGB(29,18,29), Bg3=Color3.fromRGB(45,27,43), Panel=Color3.fromRGB(50,30,48), El=Color3.fromRGB(61,36,58), Hover=Color3.fromRGB(82,46,75), Tx=Color3.fromRGB(255,239,248), TxD=Color3.fromRGB(173,143,162), Stroke=Color3.fromRGB(91,49,80)},
+    Cyan      = {Acc=Color3.fromRGB(94,218,255), Acc2=Color3.fromRGB(133,244,255), Bg=Color3.fromRGB(10,16,20), Bg2=Color3.fromRGB(16,25,30), Bg3=Color3.fromRGB(24,37,43), Panel=Color3.fromRGB(28,42,49), El=Color3.fromRGB(34,51,59), Hover=Color3.fromRGB(45,67,76), Tx=Color3.fromRGB(232,250,255), TxD=Color3.fromRGB(139,169,178), Stroke=Color3.fromRGB(48,78,88)},
 }
-local T = {
-    Bg=Color3.fromRGB(15,12,20), Bg2=Color3.fromRGB(25,20,35), Bg3=Color3.fromRGB(40,32,50),
-    Panel=Color3.fromRGB(34,26,44), El=Color3.fromRGB(48,38,60), Hover=Color3.fromRGB(64,50,80),
-    Tx=Color3.fromRGB(240,230,250), TxD=Color3.fromRGB(150,140,165),
-    Grn=Color3.fromRGB(40,200,80), Red=Color3.fromRGB(220,40,40),
-    Stroke=Color3.fromRGB(64,50,80),
-    F=Enum.Font.GothamMedium, FB=Enum.Font.GothamBold, FS=Enum.Font.GothamSemibold,
-}
+local T = {Bg=THEMES.Halloween.Bg, Bg2=THEMES.Halloween.Bg2, Bg3=THEMES.Halloween.Bg3, Panel=THEMES.Halloween.Panel, El=THEMES.Halloween.El, Hover=THEMES.Halloween.Hover, Acc=THEMES.Halloween.Acc, Acc2=THEMES.Halloween.Acc2, Tx=THEMES.Halloween.Tx, TxD=THEMES.Halloween.TxD, Grn=Color3.fromRGB(40,200,80), Red=Color3.fromRGB(220,40,40), Stroke=THEMES.Halloween.Stroke, F=Enum.Font.GothamMedium, FB=Enum.Font.GothamBold, FS=Enum.Font.GothamSemibold}
+
+local ThemeRoots = {}
+local function sameColor(a,b) return typeof(a)=="Color3" and typeof(b)=="Color3" and math.abs(a.R-b.R)<0.001 and math.abs(a.G-b.G)<0.001 and math.abs(a.B-b.B)<0.001 end
 local function applyTheme(name)
-    local t = THEMES[name] or THEMES.Halloween
-    T.Acc, T.Acc2, T.Bg = t.Acc, t.Acc2, t.Bg
-    F.TH_Name = name
+    local nextTheme=THEMES[name] or THEMES.Halloween
+    local old={Bg=T.Bg,Bg2=T.Bg2,Bg3=T.Bg3,Panel=T.Panel,El=T.El,Hover=T.Hover,Acc=T.Acc,Acc2=T.Acc2,Tx=T.Tx,TxD=T.TxD,Stroke=T.Stroke}
+    for k,v in pairs(nextTheme) do T[k]=v end
+    F.TH_Name=name
+    local map={}
+    for k,v in pairs(old) do map[v]=nextTheme[k] end
+    for _,root in ipairs(ThemeRoots) do
+        if root and root.Parent then
+            for _,o in ipairs(root:GetDescendants()) do
+                pcall(function()
+                    if o:IsA("GuiObject") then o.BackgroundColor3=map[o.BackgroundColor3] or o.BackgroundColor3; o.BorderColor3=map[o.BorderColor3] or o.BorderColor3 end
+                    if o:IsA("TextLabel") or o:IsA("TextButton") or o:IsA("TextBox") then o.TextColor3=map[o.TextColor3] or o.TextColor3; o.PlaceholderColor3=map[o.PlaceholderColor3] or o.PlaceholderColor3 end
+                    if o:IsA("ImageLabel") or o:IsA("ImageButton") then o.ImageColor3=map[o.ImageColor3] or o.ImageColor3 end
+                    if o:IsA("ScrollingFrame") then o.ScrollBarImageColor3=map[o.ScrollBarImageColor3] or o.ScrollBarImageColor3 end
+                    if o:IsA("UIStroke") then o.Color=map[o.Color] or o.Color end
+                end)
+            end
+        end
+    end
 end
 applyTheme(F.TH_Name)
 
@@ -108,6 +120,7 @@ end
 local Gui=Instance.new("ScreenGui")
 Gui.Name="FemboyUI" Gui.ResetOnSpawn=false Gui.IgnoreGuiInset=true
 Gui.ZIndexBehavior=Enum.ZIndexBehavior.Sibling Gui.Parent=Parent
+table.insert(ThemeRoots,Gui)
 
 local Main=Instance.new("Frame")
 Main.Size=UDim2.new(0,WIN_W,0,WIN_H)
@@ -132,13 +145,13 @@ LogoLbl.Size=UDim2.new(1,0,1,0) LogoLbl.BackgroundTransparency=1
 LogoLbl.Text="🎃" LogoLbl.TextSize=13 LogoLbl.ZIndex=14 LogoLbl.Parent=Logo
 
 local HubName=Instance.new("TextLabel")
-HubName.Size=UDim2.new(0,180,1,0) HubName.Position=UDim2.new(0,42,0,0)
-HubName.BackgroundTransparency=1 HubName.Text="Femboy x Pumpkin 🎃"
+HubName.Size=UDim2.new(0,170,1,0) HubName.Position=UDim2.new(0,42,0,0)
+HubName.BackgroundTransparency=1 HubName.Text="Femboy Hub  •  v5.2"
 HubName.TextColor3=T.Tx HubName.Font=T.FB HubName.TextSize=13
 HubName.TextXAlignment=Enum.TextXAlignment.Left HubName.ZIndex=13 HubName.Parent=Topbar
 
 local SearchBox=Instance.new("Frame")
-SearchBox.Size=UDim2.new(0,180,0,22) SearchBox.Position=UDim2.new(0.5,-90,0,6)
+SearchBox.Size=UDim2.new(0,190,0,22) SearchBox.Position=UDim2.new(0.5,-95,0,6)
 SearchBox.BackgroundColor3=T.Bg3 SearchBox.BackgroundTransparency=0.3
 SearchBox.BorderSizePixel=0 SearchBox.ZIndex=13 SearchBox.Parent=Topbar
 round(SearchBox,6) stroke(SearchBox,T.Stroke,1,0.5)
@@ -148,6 +161,12 @@ SInput.BackgroundTransparency=1 SInput.Text="" SInput.PlaceholderText="🔍 Sear
 SInput.PlaceholderColor3=T.TxD SInput.TextColor3=T.Tx SInput.Font=T.F
 SInput.TextSize=11 SInput.TextXAlignment=Enum.TextXAlignment.Left
 SInput.ClearTextOnFocus=false SInput.ZIndex=14 SInput.Parent=SearchBox
+
+local StatsLabel=Instance.new("TextLabel")
+StatsLabel.Size=UDim2.new(0,145,1,0) StatsLabel.Position=UDim2.new(1,-178,0,0)
+StatsLabel.BackgroundTransparency=1 StatsLabel.Text="0 FPS  •  0 ms" StatsLabel.TextColor3=T.TxD
+StatsLabel.Font=T.FS StatsLabel.TextSize=10 StatsLabel.TextXAlignment=Enum.TextXAlignment.Right
+StatsLabel.ZIndex=13 StatsLabel.Parent=Topbar
 
 local CB=Instance.new("TextButton")
 CB.Size=UDim2.new(0,20,0,20) CB.Position=UDim2.new(1,-28,0,7)
@@ -394,7 +413,7 @@ local function mkSbItem(icon, pageName)
         for pn,pg in pairs(Pages) do pg.Visible=(pn==pageName) end
         ActivePage=pageName
     end)
-    table.insert(SbItems,{btn=B,lbl=L})
+    table.insert(SbItems,{btn=B,lbl=L,page=pageName})
     return B
 end
 
@@ -556,10 +575,15 @@ mkToggle(L,"Show FPS","MS_ShowFPS")
 mkSection(R,"Theme")
 mkDropdown(R,"Theme","TH_Name",{"Halloween","Pumpkin","Blood","Ghost","Rose","Cyan"},function(v)
     applyTheme(v)
-    notify("Theme","Применено: "..v,2,T.Acc)
+    notify("Theme","Applied: "..v,1.5,T.Acc)
 end)
 mkButton(R,"Destroy UI",function()
+    if flyBV then flyBV:Destroy() flyBV=nil end
+    for _,o in ipairs(Lighting:GetChildren()) do
+        if o.Name=="FB_Bloom" or o.Name=="FB_CC" then pcall(function() o:Destroy() end) end
+    end
     Gui:Destroy()
+    if NH then NH:Destroy() NH=nil end
     _G.FB_Loaded=false
 end)
 
@@ -585,8 +609,8 @@ authLbl.Parent=R round(authLbl,6) stroke(authLbl,T.Acc,1,0.4)
 local apad=Instance.new("UIPadding")
 apad.PaddingLeft=UDim.new(0,8) apad.PaddingTop=UDim.new(0,6) apad.Parent=authLbl
 mkButton(R,"Refresh Info",function()
-    local fps=60 pcall(function() local t0=tick() RunService.RenderStepped:Wait() fps=math.floor(1/(tick()-t0)) end)
-    local ping="N/A" pcall(function() ping=math.floor(game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue()).."ms" end)
+    local fps=fpsV>0 and fpsV or 0
+    local ping=pingV>0 and (pingV.."ms") or "N/A"
     infoLbl.Text="Player: "..LP.Name.."\nGame: "..game.PlaceId.."\nFPS: "..fps.."\nPing: "..ping.."\nPlayers: "..#Players:GetPlayers().."/"..Players.MaxPlayers
 end)
 
@@ -603,27 +627,39 @@ mkSbItem("ℹ","Info")
 Pages.ESP.Visible=true
 ActivePage="ESP"
 
--- Watermark
-local WM=Instance.new("Frame")
-WM.Size=UDim2.new(0,170,0,20) WM.Position=UDim2.new(0.5,-85,0,6)
-WM.BackgroundColor3=T.Bg2 WM.BackgroundTransparency=0.3
-WM.BorderSizePixel=0 WM.ZIndex=20 WM.Parent=Gui
-round(WM,6) stroke(WM,T.Acc,1,0.3)
-local WMLbl=Instance.new("TextLabel")
-WMLbl.Size=UDim2.new(1,-8,1,0) WMLbl.Position=UDim2.new(0,4,0,0)
-WMLbl.BackgroundTransparency=1 WMLbl.TextColor3=T.Tx
-WMLbl.Font=T.FB WMLbl.TextSize=10 WMLbl.ZIndex=21 WMLbl.Parent=WM
+SInput:GetPropertyChangedSignal("Text"):Connect(function()
+    local q=SInput.Text:lower():gsub("^%s+",""):gsub("%s+$","")
+    if q=="" then return end
+    local exact=nil
+    for name in pairs(Pages) do if name:lower():find(q,1,true) then exact=name break end end
+    if exact then
+        for name,page in pairs(Pages) do page.Visible=(name==exact) end
+        ActivePage=exact
+        for _,item in ipairs(SbItems) do
+            local active=item.page==exact
+            item.btn.BackgroundTransparency=active and 0.4 or 1
+            item.lbl.TextColor3=active and T.Acc or T.TxD
+        end
+    end
+end)
 
+-- Runtime stats
 local fpsC,fpsT,fpsV=0,0,0
+local pingV=0
+local Stats=game:GetService("Stats")
+local function readPing()
+    local ok,v=pcall(function() return Stats.Network.ServerStatsItem["Data Ping"]:GetValue() end)
+    return ok and math.max(0,math.floor(v+0.5)) or 0
+end
 RunService.RenderStepped:Connect(function(dt)
     fpsC=fpsC+1 fpsT=fpsT+dt
-    if fpsT>=1 then fpsV=fpsC fpsC=0 fpsT=0 end
-    if F.MS_ShowFPS then
-        WM.Visible=true
-        local ping=0
-        pcall(function() ping=math.floor(game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue()) end)
-        WMLbl.Text=string.format("🎃 %d fps | %d ms", fpsV, ping)
-    else WM.Visible=false end
+    if fpsT>=0.5 then
+        fpsV=math.floor((fpsC/fpsT)+0.5)
+        fpsC,fpsT=0,0
+        pingV=readPing()
+        StatsLabel.Text=string.format("%d FPS  •  %d ms",fpsV,pingV)
+    end
+    StatsLabel.Visible=F.MS_ShowFPS
 end)
 
 -- FOV Circle
@@ -922,7 +958,7 @@ RunService.Heartbeat:Connect(function(dt)
     local c=LP.Character
     if c and c:FindFirstChild("HumanoidRootPart") then
         aaAngle=aaAngle+math.rad(720)*dt
-        c.HumanoidRootPart.CFrame=c.HumanoidRootPart.CFrame*CFrame.Angles(0,aaAngle,0)
+        c.HumanoidRootPart.CFrame=c.HumanoidRootPart.CFrame*CFrame.Angles(0,math.rad(720)*dt,0)
     end
 end)
 
@@ -1029,7 +1065,7 @@ RunService.Heartbeat:Connect(function()
         if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then dir=dir-Vector3.new(0,1,0) end
         if IS_MOBILE then
             local hum=c:FindFirstChild("Humanoid")
-            if hum and hum.MoveDirection.Magnitude>0.1 then dir=hum.MoveDirection*60 end
+            if hum and hum.MoveDirection.Magnitude>0.1 then dir=hum.MoveDirection*F.MV_FlySpeed end
         end
         flyBV.Velocity=dir*(F.MV_FlySpeed/60)
     else
@@ -1059,7 +1095,7 @@ local lastCoinTP=0
 RunService.Heartbeat:Connect(function()
     if not (F.FM_AutoCoins or F.FM_AutoDrops) then return end
     local now=tick()
-    if now-lastCoinTP<0.08 then return end
+    if now-lastCoinTP<0.20 then return end
     lastCoinTP=now
     local c=LP.Character
     if not c then return end
