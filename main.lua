@@ -1,4 +1,4 @@
---[[ Femboy UI 🥀 v4.1 | Silent Aim + Auto Shoot ]]
+--[[ Femboy x Pumpkin UI 🎃 | v5.1 | Silent Aim + Auto Shoot + Halloween ]]
 if _G.FB_Loaded then return end
 _G.FB_Loaded = true
 
@@ -9,13 +9,12 @@ local Tween = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 local Lighting = game:GetService("Lighting")
 local WS = game:GetService("Workspace")
-local RS = game:GetService("ReplicatedStorage")
 local LP = Players.LocalPlayer
 local Cam = WS.CurrentCamera
 
 local IS_MOBILE = UIS.TouchEnabled and not UIS.KeyboardEnabled
-local WIN_W = IS_MOBILE and 620 or 700
-local WIN_H = IS_MOBILE and 360 or 400
+local WIN_W = IS_MOBILE and 620 or 720
+local WIN_H = IS_MOBILE and 380 or 430
 
 local function safe(fn,d) local ok,r=pcall(fn) if ok and r~=nil then return r end return d end
 local gethuiS = safe(function() return gethui() end, nil)
@@ -28,52 +27,43 @@ end
 
 -- ================= FLAGS =================
 local F = {
-    -- ESP
     ESP_Enabled=false, ESP_Name=false, ESP_Box=false, ESP_Tracer=false,
-    ESP_Distance=false, ESP_Chams=false, ESP_Gun=false, ESP_Coins=false, ESP_Traps=false,
-    ESP_Transparency=30,
-    -- Combat
+    ESP_Distance=false, ESP_Chams=false, ESP_Role=false,
+    ESP_Gun=false, ESP_Coins=false, ESP_Traps=false, ESP_Transparency=30,
     CB_SilentAim=false, CB_AutoShoot=false, CB_KillAura=false, CB_AntiAim=false,
     CB_FOVRadius=150, CB_SilentHitPart="Head", CB_AutoShootDelay=0.15,
     CB_ShowFOVCircle=false, CB_VisibleCheck=true, CB_MaxRange=500,
-    -- Fling
     FL_Selected=false, FL_All=false, FL_Sheriff=false, FL_Murderer=false,
     FL_Power=1e5, FL_Cooldown=0.5,
-    -- Movement
     MV_Walkspeed=16, MV_JumpPower=50, MV_Fly=false, MV_FlySpeed=60,
     MV_NoClip=false, MV_InfJump=false,
-    -- Visuals
     VS_FullBright=false, VS_NoFog=false, VS_XRay=false, VS_XRayStr=70,
     VS_Bloom=false, VS_CC=false, VS_Trail=false, VS_Headless=false,
-    -- Farm
     FM_AutoCoins=false, FM_AutoDrops=false, FM_AutoKill=false,
-    -- Fun
     FN_Spin=false, FN_BunnyHop=false,
-    -- Misc
     MS_AntiAFK=true, MS_ShowFPS=true,
-    -- Theme
-    TH_Name="Rose",
+    TH_Name="Halloween",
 }
 
 -- ================= THEME =================
 local THEMES = {
-    Rose   = {Acc=Color3.fromRGB(255,105,180), Acc2=Color3.fromRGB(255,150,200), Bg=Color3.fromRGB(22,18,24)},
-    Sakura = {Acc=Color3.fromRGB(255,150,180), Acc2=Color3.fromRGB(255,200,220), Bg=Color3.fromRGB(24,20,26)},
-    Lavender= {Acc=Color3.fromRGB(180,130,255), Acc2=Color3.fromRGB(220,160,255), Bg=Color3.fromRGB(22,18,28)},
-    Cyan   = {Acc=Color3.fromRGB(120,220,255), Acc2=Color3.fromRGB(160,240,255), Bg=Color3.fromRGB(18,22,26)},
-    Mint   = {Acc=Color3.fromRGB(130,240,180), Acc2=Color3.fromRGB(180,255,210), Bg=Color3.fromRGB(18,24,22)},
-    Peach  = {Acc=Color3.fromRGB(255,180,120), Acc2=Color3.fromRGB(255,210,160), Bg=Color3.fromRGB(26,22,18)},
+    Halloween = {Acc=Color3.fromRGB(255,100,0), Acc2=Color3.fromRGB(180,0,255), Bg=Color3.fromRGB(15,12,20)},
+    Pumpkin   = {Acc=Color3.fromRGB(255,140,20), Acc2=Color3.fromRGB(255,180,60), Bg=Color3.fromRGB(18,14,22)},
+    Blood     = {Acc=Color3.fromRGB(220,40,40), Acc2=Color3.fromRGB(140,0,0), Bg=Color3.fromRGB(18,10,14)},
+    Ghost     = {Acc=Color3.fromRGB(200,200,240), Acc2=Color3.fromRGB(150,150,200), Bg=Color3.fromRGB(18,16,24)},
+    Rose      = {Acc=Color3.fromRGB(255,105,180), Acc2=Color3.fromRGB(255,150,200), Bg=Color3.fromRGB(22,18,24)},
+    Cyan      = {Acc=Color3.fromRGB(120,220,255), Acc2=Color3.fromRGB(160,240,255), Bg=Color3.fromRGB(18,22,26)},
 }
 local T = {
-    Bg=Color3.fromRGB(22,18,24), Bg2=Color3.fromRGB(28,24,30), Bg3=Color3.fromRGB(40,34,44),
-    Panel=Color3.fromRGB(34,28,38), El=Color3.fromRGB(48,40,54), Hover=Color3.fromRGB(64,52,72),
-    Tx=Color3.fromRGB(245,240,248), TxD=Color3.fromRGB(160,150,170),
-    Grn=Color3.fromRGB(130,240,180), Red=Color3.fromRGB(255,100,130),
-    Stroke=Color3.fromRGB(64,56,72),
+    Bg=Color3.fromRGB(15,12,20), Bg2=Color3.fromRGB(25,20,35), Bg3=Color3.fromRGB(40,32,50),
+    Panel=Color3.fromRGB(34,26,44), El=Color3.fromRGB(48,38,60), Hover=Color3.fromRGB(64,50,80),
+    Tx=Color3.fromRGB(240,230,250), TxD=Color3.fromRGB(150,140,165),
+    Grn=Color3.fromRGB(40,200,80), Red=Color3.fromRGB(220,40,40),
+    Stroke=Color3.fromRGB(64,50,80),
     F=Enum.Font.GothamMedium, FB=Enum.Font.GothamBold, FS=Enum.Font.GothamSemibold,
 }
 local function applyTheme(name)
-    local t = THEMES[name] or THEMES.Rose
+    local t = THEMES[name] or THEMES.Halloween
     T.Acc, T.Acc2, T.Bg = t.Acc, t.Acc2, t.Bg
     F.TH_Name = name
 end
@@ -139,11 +129,11 @@ Logo.BackgroundColor3=T.Acc Logo.BorderSizePixel=0 Logo.ZIndex=13 Logo.Parent=To
 round(Logo,6)
 local LogoLbl=Instance.new("TextLabel")
 LogoLbl.Size=UDim2.new(1,0,1,0) LogoLbl.BackgroundTransparency=1
-LogoLbl.Text="🥀" LogoLbl.TextSize=13 LogoLbl.ZIndex=14 LogoLbl.Parent=Logo
+LogoLbl.Text="🎃" LogoLbl.TextSize=13 LogoLbl.ZIndex=14 LogoLbl.Parent=Logo
 
 local HubName=Instance.new("TextLabel")
-HubName.Size=UDim2.new(0,150,1,0) HubName.Position=UDim2.new(0,42,0,0)
-HubName.BackgroundTransparency=1 HubName.Text="Femboy UI 🥀"
+HubName.Size=UDim2.new(0,180,1,0) HubName.Position=UDim2.new(0,42,0,0)
+HubName.BackgroundTransparency=1 HubName.Text="Femboy x Pumpkin 🎃"
 HubName.TextColor3=T.Tx HubName.Font=T.FB HubName.TextSize=13
 HubName.TextXAlignment=Enum.TextXAlignment.Left HubName.ZIndex=13 HubName.Parent=Topbar
 
@@ -181,7 +171,6 @@ SbLL.Padding=UDim.new(0,3) SbLL.SortOrder=Enum.SortOrder.LayoutOrder SbLL.Parent
 local SbPad=Instance.new("UIPadding")
 SbPad.PaddingTop=UDim.new(0,8) SbPad.PaddingLeft=UDim.new(0,6) SbPad.Parent=SbList
 
--- Content
 local Ct=Instance.new("Frame")
 Ct.Size=UDim2.new(1,-44,1,-34) Ct.Position=UDim2.new(0,44,0,34)
 Ct.BackgroundTransparency=1 Ct.ZIndex=11 Ct.Parent=Main
@@ -246,23 +235,20 @@ local function mkToggle(parent,name,flag,cb)
     L.BackgroundTransparency=1 L.Text=name L.TextColor3=T.Tx
     L.Font=T.F L.TextSize=11 L.TextXAlignment=Enum.TextXAlignment.Left
     L.ZIndex=R.ZIndex+2 L.Parent=R
-    local Dot2=Instance.new("Frame")
-    Dot2.Size=UDim2.new(0,8,0,8) Dot2.Position=UDim2.new(1,-14,0.5,-4)
-    Dot2.BackgroundColor3=T.Bg3 Dot2.BorderSizePixel=0 Dot2.ZIndex=R.ZIndex+2 Dot2.Parent=R
-    round(Dot2,999)
+    local Dot=Instance.new("Frame")
+    Dot.Size=UDim2.new(0,8,0,8) Dot.Position=UDim2.new(1,-14,0.5,-4)
+    Dot.BackgroundColor3=T.Bg3 Dot.BorderSizePixel=0 Dot.ZIndex=R.ZIndex+2 Dot.Parent=R
+    round(Dot,999)
     local B=Instance.new("TextButton")
     B.Size=UDim2.new(1,0,1,0) B.BackgroundTransparency=1 B.Text=""
     B.ZIndex=R.ZIndex+4 B.Parent=R
     local function up(anim)
         local on=F[flag]
-        if anim then tw(Dot2,{BackgroundColor3=on and T.Acc or T.Bg3},0.2):Play()
-        else Dot2.BackgroundColor3=on and T.Acc or T.Bg3 end
+        if anim then tw(Dot,{BackgroundColor3=on and T.Acc or T.Bg3},0.2):Play()
+        else Dot.BackgroundColor3=on and T.Acc or T.Bg3 end
         if cb then cb(on) end
     end
-    B.MouseButton1Click:Connect(function()
-        F[flag]=not F[flag]
-        up(true)
-    end)
+    B.MouseButton1Click:Connect(function() F[flag]=not F[flag] up(true) end)
     up(false)
     return R
 end
@@ -418,6 +404,7 @@ local L,R=mkCols(p)
 mkSection(L,"ESP")
 mkToggle(L,"Enable ESP","ESP_Enabled")
 mkToggle(L,"Names","ESP_Name")
+mkToggle(L,"Role в нике","ESP_Role")
 mkToggle(L,"Boxes","ESP_Box")
 mkToggle(L,"Tracers","ESP_Tracer")
 mkToggle(L,"Distance","ESP_Distance")
@@ -444,9 +431,7 @@ mkButton(R,"Test Shoot",function()
     local c=LP.Character
     if not c then return end
     for _,tool in ipairs(c:GetChildren()) do
-        if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
-            pcall(function() tool:Activate() end)
-        end
+        if tool:IsA("Tool") then pcall(function() tool:Activate() end) end
     end
     notify("Auto Shoot","Test",1.5)
 end)
@@ -506,7 +491,6 @@ mkButton(R,"TP to Lobby",function()
     end
 end)
 
--- Fling list
 p=mkPage("FlingList")
 L,R=mkCols(p)
 mkSection(L,"Выбор игроков")
@@ -539,9 +523,7 @@ for _,plr in ipairs(Players:GetPlayers()) do addPlayer(plr) end
 Players.PlayerAdded:Connect(addPlayer)
 Players.PlayerRemoving:Connect(function(plr)
     if flingButtons[plr] then
-        flingButtons[plr]:Destroy()
-        flingButtons[plr]=nil
-        flingSelected[plr]=nil
+        flingButtons[plr]:Destroy() flingButtons[plr]=nil flingSelected[plr]=nil
     end
 end)
 mkSection(R,"Fling")
@@ -555,9 +537,7 @@ mkButton(R,"Fling Selected Now",function()
     for plr,sel in pairs(flingSelected) do
         if sel and plr.Character then
             local thp=plr.Character:FindFirstChild("HumanoidRootPart")
-            if thp then
-                pcall(function() thp.Velocity=Vector3.new(1e5,1e5,1e5) end)
-            end
+            if thp then pcall(function() thp.Velocity=Vector3.new(1e5,1e5,1e5) end) end
         end
     end
 end)
@@ -574,7 +554,7 @@ mkSection(L,"General")
 mkToggle(L,"Anti-AFK","MS_AntiAFK")
 mkToggle(L,"Show FPS","MS_ShowFPS")
 mkSection(R,"Theme")
-mkDropdown(R,"Theme","TH_Name",{"Rose","Sakura","Lavender","Cyan","Mint","Peach"},function(v)
+mkDropdown(R,"Theme","TH_Name",{"Halloween","Pumpkin","Blood","Ghost","Rose","Cyan"},function(v)
     applyTheme(v)
     notify("Theme","Применено: "..v,2,T.Acc)
 end)
@@ -596,11 +576,11 @@ local ipad=Instance.new("UIPadding")
 ipad.PaddingLeft=UDim.new(0,8) ipad.PaddingTop=UDim.new(0,6) ipad.Parent=infoLbl
 mkSection(R,"Author")
 local authLbl=Instance.new("TextLabel")
-authLbl.Size=UDim2.new(1,0,0,80) authLbl.BackgroundColor3=T.Panel
+authLbl.Size=UDim2.new(1,0,0,90) authLbl.BackgroundColor3=T.Panel
 authLbl.BackgroundTransparency=0.5 authLbl.TextColor3=T.Tx
 authLbl.Font=T.F authLbl.TextSize=11 authLbl.TextXAlignment=Enum.TextXAlignment.Left
 authLbl.TextYAlignment=Enum.TextYAlignment.Top authLbl.TextWrapped=true
-authLbl.Text="🥀 Femboy UI v4.1\nAuthor: Femboy\nSilent Aim + Auto Shoot\nDiscord: discord.gg/femboy"
+authLbl.Text="🎃 Femboy x Pumpkin v5.1\nAuthor: Femboy\nSilent Aim + Auto Shoot\nDiscord: discord.gg/femboy"
 authLbl.Parent=R round(authLbl,6) stroke(authLbl,T.Acc,1,0.4)
 local apad=Instance.new("UIPadding")
 apad.PaddingLeft=UDim.new(0,8) apad.PaddingTop=UDim.new(0,6) apad.Parent=authLbl
@@ -610,13 +590,12 @@ mkButton(R,"Refresh Info",function()
     infoLbl.Text="Player: "..LP.Name.."\nGame: "..game.PlaceId.."\nFPS: "..fps.."\nPing: "..ping.."\nPlayers: "..#Players:GetPlayers().."/"..Players.MaxPlayers
 end)
 
--- Sidebar
-mkSbItem("🌸","ESP")
+mkSbItem("🎃","ESP")
 mkSbItem("🎯","Combat")
 mkSbItem("🏃","Movement")
 mkSbItem("👁","Visuals")
 mkSbItem("💰","Farm")
-mkSbItem("🎈","FlingList")
+mkSbItem("🌀","FlingList")
 mkSbItem("🎭","Fun")
 mkSbItem("⚙","Settings")
 mkSbItem("ℹ","Info")
@@ -643,7 +622,7 @@ RunService.RenderStepped:Connect(function(dt)
         WM.Visible=true
         local ping=0
         pcall(function() ping=math.floor(game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue()) end)
-        WMLbl.Text=string.format("🥀 %d fps | %d ms", fpsV, ping)
+        WMLbl.Text=string.format("🎃 %d fps | %d ms", fpsV, ping)
     else WM.Visible=false end
 end)
 
@@ -673,9 +652,9 @@ local function getRole(plr)
 end
 local function getCol(plr)
     local r=getRole(plr)
-    if r=="murder" then return Color3.fromRGB(255,100,120) end
-    if r=="sheriff" then return Color3.fromRGB(120,200,255) end
-    return Color3.fromRGB(130,240,180)
+    if r=="murder" then return Color3.fromRGB(220,40,40) end
+    if r=="sheriff" then return Color3.fromRGB(0,140,255) end
+    return Color3.fromRGB(40,200,80)
 end
 
 -- ESP
@@ -737,7 +716,9 @@ RunService.RenderStepped:Connect(function()
                 end
                 d.name.Visible=F.ESP_Name
                 if F.ESP_Name then
-                    d.name.Text=plr.Name
+                    local nm=plr.Name
+                    if F.ESP_Role then nm=nm.." ["..getRole(plr):upper().."]" end
+                    d.name.Text=nm
                     d.name.Position=UDim2.new(0,pos.X-size.X/2,0,bp.Y-16)
                     d.name.Size=UDim2.new(0,size.X,0,14)
                     d.name.TextColor3=col
@@ -770,8 +751,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- ================= SILENT AIM =================
--- Возвращает лучшую цель в пределах FOV
+-- Silent Aim
 local function getBestTarget()
     local best, bestDist = nil, F.CB_FOVRadius
     local myChar = LP.Character
@@ -794,13 +774,9 @@ local function getBestTarget()
                                 params.FilterDescendantsInstances = {myChar, plr.Character}
                                 local dir = (hrp.Position - Cam.CFrame.Position).Unit * dist3d
                                 local result = WS:Raycast(Cam.CFrame.Position, dir, params)
-                                if not result then
-                                    bestDist = dist2d
-                                    best = plr
-                                end
+                                if not result then bestDist=dist2d best=plr end
                             else
-                                bestDist = dist2d
-                                best = plr
+                                bestDist=dist2d best=plr
                             end
                         end
                     end
@@ -817,75 +793,49 @@ RunService.RenderStepped:Connect(function()
     currentTarget = getBestTarget()
 end)
 
--- Silent Aim через hook __namecall
-local mt = getrawmetatable(game)
-local oldNamecall = mt.__namecall
-setreadonly(mt, false)
-mt.__namecall = newcclosure(function(self, ...)
-    local method = getnamecallmethod()
-    local args = {...}
-
-    if F.CB_SilentAim and currentTarget and currentTarget.Character then
-        local hitPart = currentTarget.Character:FindFirstChild(F.CB_SilentHitPart)
-            or currentTarget.Character:FindFirstChild("Head")
-            or currentTarget.Character:FindFirstChild("HumanoidRootPart")
-
-        if hitPart then
-            -- Hooks для raycast-методов
-            if method == "FindPartOnRay" or method == "FindPartOnRayWithIgnoreList"
-                or method == "FindPartOnRayWithWhitelist" or method == "Raycast" then
-                if args[1] and typeof(args[1]) == "Ray" then
-                    local origin = args[1].Origin
-                    args[1] = Ray.new(origin, (hitPart.Position - origin))
-                elseif args[1] and typeof(args[1]) == "Vector3" then
-                    args[2] = hitPart.Position - args[1]
-                elseif typeof(args[2]) == "Vector3" then
-                    args[2] = hitPart.Position - args[2]
+local ok_mt, mt = pcall(getrawmetatable, game)
+if ok_mt and mt then
+    local oldNamecall = mt.__namecall
+    setreadonly(mt, false)
+    mt.__namecall = newcclosure(function(self, ...)
+        local method = getnamecallmethod()
+        local args = {...}
+        if F.CB_SilentAim and currentTarget and currentTarget.Character then
+            local hitPart = currentTarget.Character:FindFirstChild(F.CB_SilentHitPart)
+                or currentTarget.Character:FindFirstChild("Head")
+                or currentTarget.Character:FindFirstChild("HumanoidRootPart")
+            if hitPart then
+                if method == "FindPartOnRay" or method == "FindPartOnRayWithIgnoreList"
+                    or method == "FindPartOnRayWithWhitelist" or method == "Raycast" then
+                    if args[1] and typeof(args[1]) == "Ray" then
+                        args[1] = Ray.new(args[1].Origin, (hitPart.Position - args[1].Origin))
+                    elseif typeof(args[2]) == "Vector3" then
+                        args[2] = hitPart.Position - args[2]
+                    end
+                    return oldNamecall(self, unpack(args))
                 end
-                return oldNamecall(self, unpack(args))
             end
         end
-    end
-    return oldNamecall(self, ...)
-end)
-setreadonly(mt, true)
+        return oldNamecall(self, ...)
+    end)
+    setreadonly(mt, true)
+end
 
--- ================= AUTO SHOOT =================
+-- Auto Shoot
 local lastShoot = 0
 local function tryShoot()
     local c = LP.Character
     if not c then return end
-
-    -- Ищем инструменты в руках
     local tool = c:FindFirstChildOfClass("Tool")
     if not tool then
-        -- Пробуем экипировать из бэкпака
         local bp = LP:FindFirstChild("Backpack")
         if bp then
             for _,t in ipairs(bp:GetChildren()) do
-                if t:IsA("Tool") then
-                    pcall(function() t.Parent = c end)
-                    tool = t
-                    break
-                end
+                if t:IsA("Tool") then pcall(function() t.Parent=c end) tool=t break end
             end
         end
     end
-
-    if tool then
-        pcall(function() tool:Activate() end)
-    end
-
-    -- Дополнительно: через Mouse
-    pcall(function()
-        local mouse = LP:GetMouse()
-        if mouse and mouse.Target then
-            -- имитируем клик
-            local VIM = game:GetService("VirtualInputManager")
-            VIM:SendMouseButtonEvent(0, 0, 0, true, game, 0)
-            VIM:SendMouseButtonEvent(0, 0, 0, false, game, 0)
-        end
-    end)
+    if tool then pcall(function() tool:Activate() end) end
 end
 
 RunService.Heartbeat:Connect(function()
@@ -897,7 +847,7 @@ RunService.Heartbeat:Connect(function()
     pcall(tryShoot)
 end)
 
--- ================= FIXED FLING =================
+-- Fling
 local lastFling = 0
 local function flingTarget(plr)
     if plr == LP then return end
@@ -905,25 +855,19 @@ local function flingTarget(plr)
     if not char then return end
     local thp = char:FindFirstChild("HumanoidRootPart")
     if not thp then return end
-
     pcall(function() thp:SetNetworkOwner(LP) end)
-
     local bv = Instance.new("BodyVelocity")
     bv.Velocity = Vector3.new(F.FL_Power, F.FL_Power, F.FL_Power)
     bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
     bv.Parent = thp
-
     local bav = Instance.new("BodyAngularVelocity")
     bav.AngularVelocity = Vector3.new(F.FL_Power, F.FL_Power, F.FL_Power)
     bav.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
     bav.Parent = thp
-
     task.delay(0.25, function()
         if bv and bv.Parent then bv:Destroy() end
         if bav and bav.Parent then bav:Destroy() end
-        if thp and thp.Parent then
-            pcall(function() thp.Velocity = Vector3.zero end)
-        end
+        if thp and thp.Parent then pcall(function() thp.Velocity = Vector3.zero end) end
     end)
 end
 
@@ -932,35 +876,20 @@ RunService.Heartbeat:Connect(function()
     if now - lastFling < F.FL_Cooldown then return end
     local c = LP.Character
     if not c or not c:FindFirstChild("HumanoidRootPart") then return end
-
     local function tryFling(plr)
         if plr==LP then return end
         if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") then return end
         local dist = (c.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).Magnitude
-        if dist < 25 then
-            lastFling = now
-            pcall(flingTarget, plr)
-        end
+        if dist < 25 then lastFling = now pcall(flingTarget, plr) end
     end
-
     if F.FL_Selected then
         for plr,sel in pairs(flingSelected) do
             if sel then tryFling(plr) end
         end
     end
-    if F.FL_All then
-        for _,plr in ipairs(Players:GetPlayers()) do tryFling(plr) end
-    end
-    if F.FL_Sheriff then
-        for _,plr in ipairs(Players:GetPlayers()) do
-            if getRole(plr)=="sheriff" then tryFling(plr) end
-        end
-    end
-    if F.FL_Murderer then
-        for _,plr in ipairs(Players:GetPlayers()) do
-            if getRole(plr)=="murder" then tryFling(plr) end
-        end
-    end
+    if F.FL_All then for _,plr in ipairs(Players:GetPlayers()) do tryFling(plr) end end
+    if F.FL_Sheriff then for _,plr in ipairs(Players:GetPlayers()) do if getRole(plr)=="sheriff" then tryFling(plr) end end end
+    if F.FL_Murderer then for _,plr in ipairs(Players:GetPlayers()) do if getRole(plr)=="murder" then tryFling(plr) end end end
 end)
 
 -- Kill Aura
@@ -997,7 +926,7 @@ RunService.Heartbeat:Connect(function(dt)
     end
 end)
 
--- Lighting / XRay / Bloom / CC / Headless / Trail
+-- Lighting
 RunService.Heartbeat:Connect(function()
     if F.VS_FullBright then
         Lighting.Ambient=Color3.fromRGB(255,255,255)
@@ -1125,12 +1054,12 @@ RunService.Stepped:Connect(function()
     end
 end)
 
--- Auto Coins / Drops / Kill
+-- Auto Farm (coins + drops)
 local lastCoinTP=0
 RunService.Heartbeat:Connect(function()
     if not (F.FM_AutoCoins or F.FM_AutoDrops) then return end
     local now=tick()
-    if now-lastCoinTP<0.06 then return end
+    if now-lastCoinTP<0.08 then return end
     lastCoinTP=now
     local c=LP.Character
     if not c then return end
@@ -1140,8 +1069,8 @@ RunService.Heartbeat:Connect(function()
     for _,obj in ipairs(WS:GetDescendants()) do
         if obj:IsA("BasePart") then
             local nm=obj.Name:lower()
-            local isCoin=F.FM_AutoCoins and nm:find("coin")
-            local isDrop=F.FM_AutoDrops and (nm=="gundrop" or nm=="knifedrop" or nm=="drop")
+            local isCoin = F.FM_AutoCoins and nm:find("coin")
+            local isDrop = F.FM_AutoDrops and (nm=="gundrop" or nm=="knifedrop" or nm=="drop")
             if isCoin or isDrop then
                 local d=(obj.Position-hrp.Position).Magnitude
                 if d<shortest then shortest=d closest=obj end
@@ -1172,7 +1101,6 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- Spin / Bunny Hop
 RunService.Heartbeat:Connect(function()
     if F.FN_Spin then
         local c=LP.Character
@@ -1188,7 +1116,6 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- Anti-AFK
 if F.MS_AntiAFK then
     pcall(function()
         LP.Idled:Connect(function()
@@ -1198,7 +1125,6 @@ if F.MS_AntiAFK then
     end)
 end
 
--- Close
 CB.MouseButton1Click:Connect(function()
     tw(Main,{Size=UDim2.new(0,0,0,0),Position=UDim2.new(0.5,0,0.5,0)},0.25):Play()
     task.wait(0.3)
@@ -1206,7 +1132,6 @@ CB.MouseButton1Click:Connect(function()
     _G.FB_Loaded=false
 end)
 
--- Fade in
 Main.Size=UDim2.new(0,0,0,0)
 Main.Position=UDim2.new(0.5,0,0.5,0)
 Tween:Create(Main,TweenInfo.new(0.4,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{
@@ -1214,5 +1139,5 @@ Tween:Create(Main,TweenInfo.new(0.4,Enum.EasingStyle.Back,Enum.EasingDirection.O
     Position=UDim2.new(0.5,-WIN_W/2,0.5,-WIN_H/2)
 }):Play()
 
-notify("Femboy UI 🥀","Silent Aim + Auto Shoot готовы",4)
-print("[Femboy UI 🥀 v4.1] loaded")
+notify("🎃 Femboy x Pumpkin v5.1","Silent Aim + Auto Shoot готовы",4)
+print("[Femboy x Pumpkin v5.1] loaded")
