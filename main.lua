@@ -1,4 +1,4 @@
---[[ Femboy x Pumpkin UI | v5.5 | Silent Aim + Auto Shoot + Halloween ]]
+--[[ Femboy x Pumpkin UI | v5.6 | Silent Aim + Auto Shoot + Halloween ]]
 if _G.FB_Loaded then return end
 _G.FB_Loaded = true
 
@@ -11,6 +11,7 @@ local Lighting = game:GetService("Lighting")
 local WS = game:GetService("Workspace")
 local LP = Players.LocalPlayer
 local Cam = WS.CurrentCamera
+local installSilentHook
 
 local IS_MOBILE = UIS.TouchEnabled and not UIS.KeyboardEnabled
 local WIN_W = IS_MOBILE and 360 or 720
@@ -172,7 +173,7 @@ LogoLbl.Text="🎃" LogoLbl.TextSize=13 LogoLbl.ZIndex=14 LogoLbl.Parent=Logo
 
 local HubName=Instance.new("TextLabel")
 HubName.Size=UDim2.new(0,170,1,0) HubName.Position=UDim2.new(0,35,0,0)
-HubName.BackgroundTransparency=1 HubName.Text="Femboy Hub  •  v5.5"
+HubName.BackgroundTransparency=1 HubName.Text="Femboy Hub  •  v5.6"
 HubName.TextColor3=T.Tx HubName.Font=T.FB HubName.TextSize=13
 HubName.TextXAlignment=Enum.TextXAlignment.Left HubName.ZIndex=13 HubName.Parent=Topbar
 
@@ -478,7 +479,12 @@ p=mkPage("Combat")
 L,R=mkCols(p)
 mkSection(L,"Aim")
 mkToggle(L,"Enable Aim","CB_Aim")
-mkToggle(L,"Enable Silent Aim","CB_SilentAim")
+mkToggle(L,"Enable Silent Aim","CB_SilentAim",function(on)
+    if on and not installSilentHook() then
+        F.CB_SilentAim = false
+        notify("Silent Aim", "Hook unavailable in this executor", 2, T.TxD)
+    end
+end)
 mkToggle(L,"Visible Check","CB_VisibleCheck")
 mkToggle(L,"Show FOV Circle","CB_ShowFOVCircle")
 mkDropdown(L,"Hit Part","CB_SilentHitPart",{"Head","HumanoidRootPart","UpperTorso","Torso"})
@@ -646,7 +652,7 @@ authLbl.Size=UDim2.new(1,0,0,90) authLbl.BackgroundColor3=T.Panel
 authLbl.BackgroundTransparency=0.5 authLbl.TextColor3=T.Tx
 authLbl.Font=T.F authLbl.TextSize=11 authLbl.TextXAlignment=Enum.TextXAlignment.Left
 authLbl.TextYAlignment=Enum.TextYAlignment.Top authLbl.TextWrapped=true
-authLbl.Text="🎃 Femboy x Pumpkin v5.5\nAuthor: Femboy\nAim: Q  |  Silent: E\nMobile: AIM / SILENT / MENU\nDiscord: discord.gg/femboy"
+authLbl.Text="🎃 Femboy x Pumpkin v5.6\nAuthor: Femboy\nAim: Q  |  Silent: E\nMobile: AIM / SILENT / MENU\nDiscord: discord.gg/femboy"
 authLbl.Parent=R round(authLbl,6) stroke(authLbl,T.Acc,1,0.4)
 local apad=Instance.new("UIPadding")
 apad.PaddingLeft=UDim.new(0,8) apad.PaddingTop=UDim.new(0,6) apad.Parent=authLbl
@@ -918,47 +924,101 @@ RunService.RenderStepped:Connect(function(dt)
     Cam.CFrame = Cam.CFrame:Lerp(desired, alpha)
 end)
 
--- Optional executor hook. If the executor cannot safely hook the metatable, Silent Aim is disabled without blocking startup.
-local ok_mt, mt = pcall(function() return getrawmetatable(game) end)
-if ok_mt and mt and type(newcclosure) == "function" and type(getnamecallmethod) == "function" and type(setreadonly) == "function" then
-    local oldNamecall = mt.__namecall
-    local hookOk = pcall(function()
-        setreadonly(mt, false)
-        mt.__namecall = newcclosure(function(self, ...)
-            if saBusy or not silentActive or not currentTarget then
-                return oldNamecall(self, ...)
-            end
-            local ok, result = pcall(function()
-                local method = getnamecallmethod()
-                if method ~= "FindPartOnRay" and method ~= "FindPartOnRayWithIgnoreList" and method ~= "FindPartOnRayWithWhitelist" and method ~= "Raycast" then
-                    return oldNamecall(self, ...)
-                end
-                local hitPart = getHitPart(currentTarget)
-                if not hitPart then return oldNamecall(self, ...) end
-                local args = {...}
-                if typeof(args[1]) == "Ray" then
-                    args[1] = Ray.new(args[1].Origin, hitPart.Position - args[1].Origin)
-                elseif method == "Raycast" and typeof(args[1]) == "Vector3" and typeof(args[2]) == "Vector3" then
-                    args[2] = hitPart.Position - args[1]
-                end
-                saBusy = true
-                local out = oldNamecall(self, unpack(args))
-                saBusy = false
-                return out
-            end)
-            saBusy = false
-            if ok then return result end
-            return oldNamecall(self, ...)
-        end)
-        setreadonly(mt, true)
-    end)
-    saHookInstalled = hookOk
-    if not hookOk then pcall(function() setreadonly(mt, true) end) end
-end
+-- Silent Aim hook is installed lazily only when the feature is enabled.
+-- This keeps the script startup independent from executor hook APIs.
+local saHookInstalled = false
+local saHookTried = false
+local saOldNamecall = nil
 
-if not saHookInstalled then
-    F.CB_SilentAim = false
-    silentActive = false
+installSilentHook = function()
+    if saHookInstalled then return true end
+    if saHookTried then return false end
+    saHookTried = true
+
+    local hookmetamethodFn = rawget(_G, "hookmetamethod")
+    local newcclosureFn = rawget(_G, "newcclosure")
+    local getnamecallmethodFn = rawget(_G, "getnamecallmethod")
+
+    if type(hookmetamethodFn) == "function" and type(getnamecallmethodFn) == "function" then
+        local ok, old = pcall(function()
+            return hookmetamethodFn(game, "__namecall", (type(newcclosureFn) == "function" and newcclosureFn or function(f) return f end)(function(self, ...)
+                if saBusy or not silentActive or not currentTarget then
+                    return old(self, ...)
+                end
+                local okCall, result = pcall(function()
+                    local method = getnamecallmethodFn()
+                    if method ~= "FindPartOnRay" and method ~= "FindPartOnRayWithIgnoreList" and method ~= "FindPartOnRayWithWhitelist" and method ~= "Raycast" then
+                        return old(self, ...)
+                    end
+                    local hitPart = getHitPart(currentTarget)
+                    if not hitPart then return old(self, ...) end
+                    local args = {...}
+                    if typeof(args[1]) == "Ray" then
+                        args[1] = Ray.new(args[1].Origin, hitPart.Position - args[1].Origin)
+                    elseif method == "Raycast" and typeof(args[1]) == "Vector3" and typeof(args[2]) == "Vector3" then
+                        args[2] = hitPart.Position - args[1]
+                    end
+                    saBusy = true
+                    local out = old(self, unpack(args))
+                    saBusy = false
+                    return out
+                end)
+                saBusy = false
+                if okCall then return result end
+                return old(self, ...)
+            end))
+        end)
+        if ok and type(old) == "function" then
+            saOldNamecall = old
+            saHookInstalled = true
+            return true
+        end
+    end
+
+    -- Compatibility fallback for executors that expose only raw metatable APIs.
+    local getraw = rawget(_G, "getrawmetatable")
+    local setro = rawget(_G, "setreadonly")
+    if type(getraw) == "function" and type(setro) == "function" then
+        local ok, mt = pcall(getraw, game)
+        if ok and mt and type(mt.__namecall) == "function" then
+            local old = mt.__namecall
+            local okHook = pcall(function()
+                setro(mt, false)
+                mt.__namecall = (type(newcclosureFn) == "function" and newcclosureFn or function(f) return f end)(function(self, ...)
+                    if saBusy or not silentActive or not currentTarget then return old(self, ...) end
+                    local okCall, result = pcall(function()
+                        local method = getnamecallmethodFn and getnamecallmethodFn() or ""
+                        if method ~= "FindPartOnRay" and method ~= "FindPartOnRayWithIgnoreList" and method ~= "FindPartOnRayWithWhitelist" and method ~= "Raycast" then
+                            return old(self, ...)
+                        end
+                        local hitPart = getHitPart(currentTarget)
+                        if not hitPart then return old(self, ...) end
+                        local args = {...}
+                        if typeof(args[1]) == "Ray" then
+                            args[1] = Ray.new(args[1].Origin, hitPart.Position - args[1].Origin)
+                        elseif method == "Raycast" and typeof(args[1]) == "Vector3" and typeof(args[2]) == "Vector3" then
+                            args[2] = hitPart.Position - args[1]
+                        end
+                        saBusy = true
+                        local out = old(self, unpack(args))
+                        saBusy = false
+                        return out
+                    end)
+                    saBusy = false
+                    if okCall then return result end
+                    return old(self, ...)
+                end)
+                setro(mt, true)
+            end)
+            if okHook then
+                saOldNamecall = old
+                saHookInstalled = true
+                return true
+            end
+            pcall(function() setro(mt, true) end)
+        end
+    end
+    return false
 end
 
 -- Desktop binds. Q = Aim, E = Silent Aim.
@@ -969,9 +1029,15 @@ UIS.InputBegan:Connect(function(input, processed)
     if key == F.CB_AimKey then
         F.CB_Aim = not F.CB_Aim
         notify("Aim", F.CB_Aim and "Enabled" or "Disabled", 1.2, F.CB_Aim and T.Acc or T.TxD)
-    elseif key == F.CB_SilentKey and saHookInstalled then
-        F.CB_SilentAim = not F.CB_SilentAim
-        notify("Silent Aim", F.CB_SilentAim and "Enabled" or "Disabled", 1.2, F.CB_SilentAim and T.Acc or T.TxD)
+    elseif key == F.CB_SilentKey then
+        local nextState = not F.CB_SilentAim
+        if nextState and not installSilentHook() then
+            notify("Silent Aim", "Hook unavailable in this executor", 2, T.TxD)
+            F.CB_SilentAim = false
+        else
+            F.CB_SilentAim = nextState
+            notify("Silent Aim", F.CB_SilentAim and "Enabled" or "Disabled", 1.2, F.CB_SilentAim and T.Acc or T.TxD)
+        end
     end
 end)
 
@@ -1338,11 +1404,14 @@ local AimBind = mobileBind("AIM", 5, function(b)
     b.BackgroundColor3 = F.CB_Aim and T.Acc or T.El
 end)
 local SilentBind = mobileBind("SILENT", 55, function(b)
-    if not saHookInstalled then
-        notify("Silent Aim", "Hook unavailable", 1.5, T.TxD)
+    local nextState = not F.CB_SilentAim
+    if nextState and not installSilentHook() then
+        notify("Silent Aim", "Hook unavailable in this executor", 2, T.TxD)
+        F.CB_SilentAim = false
+        b.BackgroundColor3 = T.El
         return
     end
-    F.CB_SilentAim = not F.CB_SilentAim
+    F.CB_SilentAim = nextState
     b.BackgroundColor3 = F.CB_SilentAim and T.Acc or T.El
 end)
 local MenuBind = mobileBind("MENU", 105, function()
@@ -1356,5 +1425,5 @@ Tween:Create(Main,TweenInfo.new(0.4,Enum.EasingStyle.Back,Enum.EasingDirection.O
     Position=UDim2.new(0.5,-WIN_W/2,0.5,-WIN_H/2)
 }):Play()
 
-notify("🎃 Femboy x Pumpkin v5.5","Aim + Silent Aim + Mobile Binds готовы",4)
-print("[Femboy x Pumpkin v5.5] loaded")
+notify("🎃 Femboy x Pumpkin v5.6","Aim + Silent Aim + Mobile Binds готовы",4)
+print("[Femboy x Pumpkin v5.6] loaded")
