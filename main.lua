@@ -1,4 +1,4 @@
---[[ Femboy x Pumpkin UI | v5.3 | Silent Aim + Auto Shoot + Halloween ]]
+--[[ Femboy x Pumpkin UI | v5.5 | Silent Aim + Auto Shoot + Halloween ]]
 if _G.FB_Loaded then return end
 _G.FB_Loaded = true
 
@@ -30,8 +30,9 @@ local F = {
     ESP_Enabled=false, ESP_Name=false, ESP_Box=false, ESP_Tracer=false,
     ESP_Distance=false, ESP_Chams=false, ESP_Role=false,
     ESP_Gun=false, ESP_Coins=false, ESP_Traps=false, ESP_Transparency=30,
-    CB_SilentAim=false, CB_AutoShoot=false, CB_KillAura=false, CB_AntiAim=false,
+    CB_SilentAim=false, CB_Aim=false, CB_AutoShoot=false, CB_KillAura=false, CB_AntiAim=false,
     CB_FOVRadius=150, CB_SilentHitPart="Head", CB_AutoShootDelay=0.15,
+    CB_AimSmooth=0.22, CB_AimKey="Q", CB_SilentKey="E",
     CB_ShowFOVCircle=false, CB_VisibleCheck=true, CB_MaxRange=500,
     FL_Selected=false, FL_All=false, FL_Sheriff=false, FL_Murderer=false,
     FL_Power=1e5, FL_Cooldown=0.5,
@@ -171,7 +172,7 @@ LogoLbl.Text="🎃" LogoLbl.TextSize=13 LogoLbl.ZIndex=14 LogoLbl.Parent=Logo
 
 local HubName=Instance.new("TextLabel")
 HubName.Size=UDim2.new(0,170,1,0) HubName.Position=UDim2.new(0,35,0,0)
-HubName.BackgroundTransparency=1 HubName.Text="Femboy Hub  •  v5.3"
+HubName.BackgroundTransparency=1 HubName.Text="Femboy Hub  •  v5.5"
 HubName.TextColor3=T.Tx HubName.Font=T.FB HubName.TextSize=13
 HubName.TextXAlignment=Enum.TextXAlignment.Left HubName.ZIndex=13 HubName.Parent=Topbar
 
@@ -475,13 +476,15 @@ mkToggle(R,"Show Traps","ESP_Traps")
 
 p=mkPage("Combat")
 L,R=mkCols(p)
-mkSection(L,"Silent Aim")
+mkSection(L,"Aim")
+mkToggle(L,"Enable Aim","CB_Aim")
 mkToggle(L,"Enable Silent Aim","CB_SilentAim")
 mkToggle(L,"Visible Check","CB_VisibleCheck")
 mkToggle(L,"Show FOV Circle","CB_ShowFOVCircle")
 mkDropdown(L,"Hit Part","CB_SilentHitPart",{"Head","HumanoidRootPart","UpperTorso","Torso"})
 mkSlider(L,"FOV Radius","CB_FOVRadius",30,600,"px")
 mkSlider(L,"Max Range","CB_MaxRange",50,2000,"m")
+mkSlider(L,"Aim Smooth","CB_AimSmooth",0.05,0.8,"x")
 mkSection(R,"Auto Shoot")
 mkToggle(R,"Enable Auto Shoot","CB_AutoShoot")
 mkSlider(R,"Shoot Delay","CB_AutoShootDelay",0.05,1,"s")
@@ -643,7 +646,7 @@ authLbl.Size=UDim2.new(1,0,0,90) authLbl.BackgroundColor3=T.Panel
 authLbl.BackgroundTransparency=0.5 authLbl.TextColor3=T.Tx
 authLbl.Font=T.F authLbl.TextSize=11 authLbl.TextXAlignment=Enum.TextXAlignment.Left
 authLbl.TextYAlignment=Enum.TextYAlignment.Top authLbl.TextWrapped=true
-authLbl.Text="🎃 Femboy x Pumpkin v5.3\nAuthor: Femboy\nSilent Aim + Auto Shoot\nDiscord: discord.gg/femboy"
+authLbl.Text="🎃 Femboy x Pumpkin v5.5\nAuthor: Femboy\nAim: Q  |  Silent: E\nMobile: AIM / SILENT / MENU\nDiscord: discord.gg/femboy"
 authLbl.Parent=R round(authLbl,6) stroke(authLbl,T.Acc,1,0.4)
 local apad=Instance.new("UIPadding")
 apad.PaddingLeft=UDim.new(0,8) apad.PaddingTop=UDim.new(0,6) apad.Parent=authLbl
@@ -874,7 +877,7 @@ local function getBestTarget()
     return best
 end
 RunService.RenderStepped:Connect(function()
-    if not F.CB_SilentAim then currentTarget=nil return end
+    if not F.CB_SilentAim and not F.CB_Aim then currentTarget=nil return end
     targetRefresh = targetRefresh + 1/60
     if targetRefresh >= targetRefreshRate then
         targetRefresh = 0
@@ -882,15 +885,47 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- The hook is deliberately guarded: one bad game call must not recurse into the hook or break the client.
+-- Aim pipeline. The camera aim is independent from Silent Aim, so one feature cannot lock the other.
+local aimTarget = nil
+local aimActive = false
+local silentActive = false
 local saBusy = false
-local ok_mt, mt = pcall(getrawmetatable, game)
-if ok_mt and mt and newcclosure and getnamecallmethod and setreadonly then
+local saHookInstalled = false
+
+local function getHitPart(plr)
+    local char = plr and plr.Character
+    if not char then return nil end
+    return char:FindFirstChild(F.CB_SilentHitPart)
+        or char:FindFirstChild("Head")
+        or char:FindFirstChild("UpperTorso")
+        or char:FindFirstChild("HumanoidRootPart")
+end
+
+local function updateAimState()
+    aimActive = F.CB_Aim
+    silentActive = F.CB_SilentAim
+    aimTarget = currentTarget
+end
+
+RunService.RenderStepped:Connect(function(dt)
+    updateAimState()
+    if not aimActive or not aimTarget then return end
+    local hitPart = getHitPart(aimTarget)
+    if not hitPart or not Cam then return end
+    local camPos = Cam.CFrame.Position
+    local desired = CFrame.lookAt(camPos, hitPart.Position)
+    local alpha = math.clamp(1 - math.exp(-math.max(F.CB_AimSmooth, 0.01) * 18 * dt), 0, 1)
+    Cam.CFrame = Cam.CFrame:Lerp(desired, alpha)
+end)
+
+-- Optional executor hook. If the executor cannot safely hook the metatable, Silent Aim is disabled without blocking startup.
+local ok_mt, mt = pcall(function() return getrawmetatable(game) end)
+if ok_mt and mt and type(newcclosure) == "function" and type(getnamecallmethod) == "function" and type(setreadonly) == "function" then
     local oldNamecall = mt.__namecall
-    pcall(function()
-        setreadonly(mt,false)
+    local hookOk = pcall(function()
+        setreadonly(mt, false)
         mt.__namecall = newcclosure(function(self, ...)
-            if saBusy or not F.CB_SilentAim or not currentTarget or not currentTarget.Character then
+            if saBusy or not silentActive or not currentTarget then
                 return oldNamecall(self, ...)
             end
             local ok, result = pcall(function()
@@ -898,26 +933,47 @@ if ok_mt and mt and newcclosure and getnamecallmethod and setreadonly then
                 if method ~= "FindPartOnRay" and method ~= "FindPartOnRayWithIgnoreList" and method ~= "FindPartOnRayWithWhitelist" and method ~= "Raycast" then
                     return oldNamecall(self, ...)
                 end
-                local hitPart = currentTarget.Character:FindFirstChild(F.CB_SilentHitPart) or currentTarget.Character:FindFirstChild("Head") or currentTarget.Character:FindFirstChild("HumanoidRootPart")
+                local hitPart = getHitPart(currentTarget)
                 if not hitPart then return oldNamecall(self, ...) end
-                local args={...}
-                if typeof(args[1])=="Ray" then
-                    args[1]=Ray.new(args[1].Origin,hitPart.Position-args[1].Origin)
-                elseif method=="Raycast" and typeof(args[1])=="Vector3" and typeof(args[2])=="Vector3" then
-                    args[2]=hitPart.Position-args[1]
+                local args = {...}
+                if typeof(args[1]) == "Ray" then
+                    args[1] = Ray.new(args[1].Origin, hitPart.Position - args[1].Origin)
+                elseif method == "Raycast" and typeof(args[1]) == "Vector3" and typeof(args[2]) == "Vector3" then
+                    args[2] = hitPart.Position - args[1]
                 end
-                saBusy=true
-                local out=oldNamecall(self,unpack(args))
-                saBusy=false
+                saBusy = true
+                local out = oldNamecall(self, unpack(args))
+                saBusy = false
                 return out
             end)
-            saBusy=false
+            saBusy = false
             if ok then return result end
             return oldNamecall(self, ...)
         end)
-        setreadonly(mt,true)
+        setreadonly(mt, true)
     end)
+    saHookInstalled = hookOk
+    if not hookOk then pcall(function() setreadonly(mt, true) end) end
 end
+
+if not saHookInstalled then
+    F.CB_SilentAim = false
+    silentActive = false
+end
+
+-- Desktop binds. Q = Aim, E = Silent Aim.
+UIS.InputBegan:Connect(function(input, processed)
+    if processed or UIS:GetFocusedTextBox() then return end
+    if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
+    local key = input.KeyCode.Name
+    if key == F.CB_AimKey then
+        F.CB_Aim = not F.CB_Aim
+        notify("Aim", F.CB_Aim and "Enabled" or "Disabled", 1.2, F.CB_Aim and T.Acc or T.TxD)
+    elseif key == F.CB_SilentKey and saHookInstalled then
+        F.CB_SilentAim = not F.CB_SilentAim
+        notify("Silent Aim", F.CB_SilentAim and "Enabled" or "Disabled", 1.2, F.CB_SilentAim and T.Acc or T.TxD)
+    end
+end)
 
 -- Auto Shoot
 local lastShoot = 0
@@ -1227,7 +1283,7 @@ local scriptClosed = false
 local function closeScript()
     if scriptClosed then return end
     scriptClosed = true
-    F.CB_SilentAim=false F.CB_AutoShoot=false F.CB_KillAura=false F.CB_AntiAim=false
+    F.CB_SilentAim=false F.CB_Aim=false F.CB_AutoShoot=false F.CB_KillAura=false F.CB_AntiAim=false
     F.ESP_Enabled=false F.ESP_Chams=false F.ESP_Tracer=false F.ESP_Box=false F.ESP_Name=false
     F.MV_Fly=false F.MV_NoClip=false F.MV_InfJump=false F.FM_AutoCoins=false F.FM_AutoDrops=false F.FM_AutoKill=false
     F.VS_Bloom=false F.VS_CC=false F.VS_Trail=false F.VS_XRay=false F.VS_FullBright=false F.VS_NoFog=false
@@ -1245,6 +1301,53 @@ CB.MouseButton1Click:Connect(closeScript)
 MinBtn.MouseButton1Click:Connect(function() setMinimized(true) end)
 Reopen.MouseButton1Click:Connect(function() setMinimized(false) end)
 
+-- Mobile bind panel. It stays compact and can be dragged on touch devices.
+local MobileBinds = Instance.new("Frame")
+MobileBinds.Name = "MobileBinds"
+MobileBinds.Size = UDim2.new(0, 156, 0, 42)
+MobileBinds.Position = UDim2.new(1, -166, 1, -52)
+MobileBinds.BackgroundColor3 = T.Panel
+MobileBinds.BackgroundTransparency = 0.08
+MobileBinds.Visible = IS_MOBILE
+MobileBinds.ZIndex = 50
+MobileBinds.Parent = Gui
+round(MobileBinds, 10)
+stroke(MobileBinds, T.Stroke, 1, 0.25)
+
+local function mobileBind(textLabel, x, callback)
+    local b = Instance.new("TextButton")
+    b.Size = UDim2.new(0, 46, 0, 30)
+    b.Position = UDim2.new(0, x, 0, 6)
+    b.BackgroundColor3 = T.El
+    b.TextColor3 = T.Tx
+    b.Font = T.FB
+    b.TextSize = 9
+    b.Text = textLabel
+    b.AutoButtonColor = false
+    b.ZIndex = 51
+    b.Parent = MobileBinds
+    round(b, 7)
+    b.MouseButton1Click:Connect(function()
+        callback(b)
+    end)
+    return b
+end
+
+local AimBind = mobileBind("AIM", 5, function(b)
+    F.CB_Aim = not F.CB_Aim
+    b.BackgroundColor3 = F.CB_Aim and T.Acc or T.El
+end)
+local SilentBind = mobileBind("SILENT", 55, function(b)
+    if not saHookInstalled then
+        notify("Silent Aim", "Hook unavailable", 1.5, T.TxD)
+        return
+    end
+    F.CB_SilentAim = not F.CB_SilentAim
+    b.BackgroundColor3 = F.CB_SilentAim and T.Acc or T.El
+end)
+local MenuBind = mobileBind("MENU", 105, function()
+    setMinimized(not Main.Visible)
+end)
 
 Main.Size=UDim2.new(0,0,0,0)
 Main.Position=UDim2.new(0.5,0,0.5,0)
@@ -1253,5 +1356,5 @@ Tween:Create(Main,TweenInfo.new(0.4,Enum.EasingStyle.Back,Enum.EasingDirection.O
     Position=UDim2.new(0.5,-WIN_W/2,0.5,-WIN_H/2)
 }):Play()
 
-notify("🎃 Femboy x Pumpkin v5.3","Silent Aim + Auto Shoot готовы",4)
-print("[Femboy x Pumpkin v5.3] loaded")
+notify("🎃 Femboy x Pumpkin v5.5","Aim + Silent Aim + Mobile Binds готовы",4)
+print("[Femboy x Pumpkin v5.5] loaded")
